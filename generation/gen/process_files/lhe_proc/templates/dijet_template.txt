@@ -1,0 +1,16 @@
+define j = g u d s u~ d~ s~ 
+define q = u d s
+define q~ = u~ d~ s~
+generate p p > j j 
+#add process p p > xd xd~ j 
+#add process p p > xd xd~ j j 
+
+output data/raw_data/bkg_dijet
+launch data/raw_data/bkg_dijet
+
+set nevents 20000
+#set pt_min_pdg {1: 450, 2: 450, 3:450}
+set ptj 250
+set run_card ebeam1 7000.0
+set run_card ebeam2 7000.0
+#set run_card etaj 2.5

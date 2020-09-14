@@ -1,0 +1,92 @@
+! 1) Settings used in the main program.
+
+Main:numberOfEvents = $nEvents         ! number of events to generate
+Main:timesAllowErrors = 500          ! how many aborts before run stops
+
+! 2) Settings related to output in init(), next() and stat().
+
+Init:showChangedSettings = on      ! list changed settings
+Init:showChangedParticleData = off ! list changed particle data
+Next:numberCount = 1000             ! print message every n events
+Next:numberShowInfo = 1            ! print event information n times
+Next:numberShowProcess = 1         ! print process record n times
+Next:numberShowEvent = 1           ! print event record n times
+PDF:pSet = 13 
+
+
+
+
+! Matching
+!JetMatching:doVeto=off
+JetMatching:qCut         = 100
+JetMatching:nJetMax      = 2
+JetMatching:setMad=on
+JetMatching:merge=on
+JetMatching:scheme=1
+JetMatching:jetAlgorithm=2
+
+
+
+
+! Hidden Valley
+HiddenValley:Ngauge =2
+HiddenValley:nFlav =1
+HiddenValley:alphaOrder =1
+HiddenValley:Lambda = $lambdas
+HiddenValley:alphaFSR =$alpha_fsr
+HiddenValley:spinFv = 0
+HiddenValley:FSR = on
+HiddenValley:fragment = on
+HiddenValley:pTminFSR = $pTminFSR
+HiddenValley:probVector =  0.75
+
+
+
+
+!Dark Particle setting
+!Z_prime = $Z_prime
+!dark_quark = $dark_quark
+!dark_meson = $dark_meson
+!dark_matter = $dark_matter
+4900023:m0 = $Z_prime
+4900101:m0 = $dark_quark
+4900101:mWidth = $mWidth
+4900101:mMin = $mMin
+4900101:mMax = $mMax
+4900111:m0 = $dark_meson
+4900113:m0 = $dark_meson
+4900211:m0 = $dark_matter
+4900213:m0 = $dark_matter
+
+!dark pion decay
+4900111:onechannel = 1 $1_rinv 91 -3 3
+4900111:addchannel = 1 $rinv 0 4900211 -4900211
+
+!dark rho decay
+4900113:onechannel = 1 $1_rin_half 91 -1 1
+4900113:addchannel = 1 $1_rin_half 91 -2 2
+4900113:addchannel = 1 $1_rin_half 91 -3 3
+4900113:addchannel = 1 $1_rin_half 91 -4 4
+4900113:addchannel = 1 $1_rin_half 91 -5 5
+4900113:addchannel = 1 $rinv 0 4900213 -4900213
+
+
+
+!ignore these particle
+4900001:m0 = 50000
+4900002:m0 = 50000
+4900003:m0 = 50000
+4900004:m0 = 50000
+4900005:m0 = 50000
+4900006:m0 = 50000
+4900011:m0 = 50000
+4900012:m0 = 50000
+4900013:m0 = 50000
+4900014:m0 = 50000
+4900015:m0 = 50000
+4900016:m0 = 50000
+
+! 3) Set the input LHE file
+! Beams:setProductionScalesFromLHEF=on ! This parameter is automatically set to True by MG5aMC when doing MLM merging with PY8.
+Beams:frameType = 4
+Beams:LHEF = $output_path   

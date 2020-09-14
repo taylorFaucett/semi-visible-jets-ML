@@ -4,3 +4,4 @@ MG5_debug
 __pycache__
 py.py
 .h5
+data/

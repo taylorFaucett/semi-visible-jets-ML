@@ -3,3 +3,4 @@ MG5_debug
 .ipynb_checkpoints
 __pycache__
 py.py
+*.h5.*

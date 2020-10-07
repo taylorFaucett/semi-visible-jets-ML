@@ -6,3 +6,4 @@ py.py
 .h5
 data/
 svj-rsync.sh
+.vscode/

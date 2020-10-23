@@ -3,6 +3,7 @@ import uproot
 import numpy as np
 import h5py
 import glob
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os
 from pyjet import cluster
@@ -20,7 +21,7 @@ def struc2arr(x):
     return x
 
 
-def jet_trimmer(tower, R0, R1, ptmin):
+def jet_trimmer(tower, R0, R1, fcut):
     # R0 = Clustering radius for the main jets
     # R1 = Clustering radius for the subjets in the primary jet
     trim_pt, trim_eta, trim_phi, trim_mass = [], [], [], []
@@ -31,7 +32,7 @@ def jet_trimmer(tower, R0, R1, ptmin):
 
     # Cluster the event
     sequence = cluster(tower, R=R0, p=-1)
-    jets = sequence.inclusive_jets(ptmin=ptmin)
+    jets = sequence.inclusive_jets(ptmin=3)
 
     # Take just the leading jet 
     # If there isn't one, drop out with an empty event
@@ -44,7 +45,7 @@ def jet_trimmer(tower, R0, R1, ptmin):
 
     # Define a cut threshold that the subjets have to meet (i.e. 5% of the original jet pT)
     jet0_max = jet0.pt
-    jet0_cut = jet0_max * 0.05
+    jet0_cut = jet0_max * fcut
 
     # Grab the subjets by clustering with R1
     subjets = cluster(jet0.constituents_array(), R=R1, p=1)
@@ -100,7 +101,9 @@ def process_tower(tower_file):
         entries = len(tower_events.groupby("entry"))
         jet_images = np.zeros((entries, 31, 31))
         for entry, tower in tower_events.groupby("entry"):
-            trimmed_jet = jet_trimmer(tower, 1.0, 0.3, 0.05)
+            tower, R0, R1, fcut
+            trimmed_jet = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05)
+            
             # Pixelize the jet to generate an image
             jet_image = pixelize(trimmed_jet)
             jet_images[entry] = jet_image
@@ -113,8 +116,9 @@ def towers_2_images():
     # Convert the tower to a jet-image
     # Save results in data/jet_images
     root_exports_path = path / "data" / "root_exports"
-    for root_export in pathlib.Path(root_exports_path).rglob("**/*.h5"):
-        print(f"working on: {root_export}")
+    t = tqdm(list(pathlib.Path(root_exports_path).rglob("**/*.h5")))
+    for root_export in t:
+        t.set_description(f"Procesing: {root_export.stem}")
         try:
             process_tower(root_export)
         except:

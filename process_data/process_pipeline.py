@@ -9,21 +9,27 @@ from nnify_efps import nnify_efps
 
 def process_pipeline():
     # Convert all tower data in root_exports into jet images
+    print("RUNNING -> towers_2_images")
     towers_2_images()
     
     # Combine individual jet image files into 1 data file
+    print("RUNNING -> combine_images")
     combine_images()
     
     # Combine sig/bkg and shuffle
+    print("RUNNING -> shuffle_sig_bkg")
     shuffle_sig_bkg()
     
     # Generate prep data for energyflow batch_compute
+    print("RUNNING -> generate_prep_data")
     generate_prep_data()
     
     # Generate EFPs from prep_data
+    print("RUNNING -> generate_efp")
     generate_efp()
     
     # nn-ify the EFPs
+    print("RUNNING -> nnify_efps")
     nnify_efps()
 
 

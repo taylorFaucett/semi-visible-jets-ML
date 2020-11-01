@@ -6,7 +6,6 @@ import glob
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os
-import energyflow as ef
 from pyjet import cluster
 from pyjet.testdata import get_event
 from scipy.stats import binned_statistic_2d
@@ -18,10 +17,11 @@ def struc2arr(x):
     # pyjet outputs a structured array. This converts
     # the 4 component structured array into a simple
     # 4xN numpy array
-    return x.view((float, len(x.dtype.names)))
+    x = x.view((float, len(x.dtype.names)))
+    return x
 
 
-def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max):
+def jet_trimmer(tower, R0, R1, fcut):
     # R0 = Clustering radius for the main jets
     # R1 = Clustering radius for the subjets in the primary jet
     trim_pt, trim_eta, trim_phi, trim_mass = [], [], [], []
@@ -34,26 +34,19 @@ def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max):
     sequence = cluster(tower, R=R0, p=-1)
     jets = sequence.inclusive_jets(ptmin=3)
 
-    # Empty event if we need to drop out early
-    empty_event = pd.DataFrame({"pt":np.zeros(1) , 
-                                "eta": np.zeros(1), 
-                                "phi": np.zeros(1), 
-                                "mass": np.zeros(1)}
-                              )
-    
     # Take just the leading jet 
     # If there isn't one, drop out with an empty event
     try:
         jet0 = jets[0]
     except:
-        return empty_event 
+        z1 = np.zeros(1)
+        return pd.DataFrame({"pt":z1 , "eta": z1, "phi": z1, "mass": z1})
         
+
     # Define a cut threshold that the subjets have to meet (i.e. 5% of the original jet pT)
     jet0_max = jet0.pt
-    if jet0_max < pt_min or jet0_max > pt_max:
-        return empty_event
-    
     jet0_cut = jet0_max * fcut
+
     # Grab the subjets by clustering with R1
     subjets = cluster(jet0.constituents_array(), R=R1, p=1)
     subjet_array = subjets.inclusive_jets()
@@ -81,12 +74,13 @@ def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max):
     trimmed_jet = pd.DataFrame(
         {"pt": trim_pt, "eta": trim_eta, "phi": trim_phi, "mass": trim_mass}
     )
+    
     return trimmed_jet
 
 
 def pixelize(jet):
     # Define the binning for the complete calorimeter
-    bins = np.arange(-1.65, 1.65, 0.1)
+    bins = np.arange(-1.6, 1.6, 0.1)
 
     # Sum energy deposits in each bin
     digitized = binned_statistic_2d(
@@ -105,14 +99,14 @@ def process_tower(tower_file):
         tower_events = pd.read_hdf(tower_file, "Tower")
         tower_events = tower_events.astype(np.float64)
         entries = len(tower_events.groupby("entry"))
-        jet_images = []
+        jet_images = np.zeros((entries, 31, 31))
         for entry, tower in tower_events.groupby("entry"):
-            trimmed_jet = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05, pt_min=300, pt_max=400)
+            tower, R0, R1, fcut
+            trimmed_jet = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05)
+            
             # Pixelize the jet to generate an image
-            if len(trimmed_jet) > 1:
-                jet_image = pixelize(trimmed_jet)
-                jet_images.append(jet_image)
-        jet_images = np.array(jet_images)
+            jet_image = pixelize(trimmed_jet)
+            jet_images[entry] = jet_image
         hf = h5py.File(h5_file_name, "w")
         hf.create_dataset("features", data=jet_images)
         hf.close()
@@ -125,7 +119,10 @@ def towers_2_images():
     t = tqdm(list(pathlib.Path(root_exports_path).rglob("**/*.h5")))
     for root_export in t:
         t.set_description(f"Procesing: {root_export.stem}")
-        process_tower(root_export)
+        try:
+            process_tower(root_export)
+        except:
+            pass
 
 if __name__ == "__main__":
     towers_2_images()

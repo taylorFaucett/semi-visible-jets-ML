@@ -21,9 +21,9 @@ def generate_efp():
         kappas = [-1, 0, 0.5, 1, 2]
         betas = [0.5, 1, 2]
 
-        X = pd.read_pickle(path.parent / "data" / "processed" / rinv / "prep_data.pkl").to_numpy()
-        y = pd.read_pickle(path.parent / "data" / "processed" / rinv / "y_prep_data.pkl").values()
-
+        hdf_file = path.parent / "data" / "processed" / f"{rinv}-prep_data.h5"
+        X = pd.read_hdf(hdf_file, "features").features.to_numpy()
+        y = pd.read_hdf(hdf_file, "targets").targets.values
         # All prime graphs with dimension d<=7
         prime_d7 = ef.EFPSet("d<=7", "p==1")
         

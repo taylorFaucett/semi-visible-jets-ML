@@ -19,6 +19,8 @@ def combine_images():
                 else:
                     jet_images = np.vstack((jet_images, jet_img_data))
                 if jet_type == "bkg_qcd" and jet_images.shape[0] > 1300000:
+                    # This is only here because we have a lot more bkg data
+                    # So I stop the file getting bigger than we need for any of our signal options
                     break
             if jet_type == "bkg_qcd":
                 targets = np.zeros(jet_images.shape[0])

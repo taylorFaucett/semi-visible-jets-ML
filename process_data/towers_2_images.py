@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import os
 import energyflow as ef
 from pyjet import cluster
+import pickle
 from pyjet.testdata import get_event
 from scipy.stats import binned_statistic_2d
 import pathlib
@@ -21,7 +22,7 @@ def struc2arr(x):
     return x.view((float, len(x.dtype.names)))
 
 
-def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max):
+def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max, eta_cut):
     # R0 = Clustering radius for the main jets
     # R1 = Clustering radius for the subjets in the primary jet
     trim_pt, trim_eta, trim_phi, trim_mass = [], [], [], []
@@ -48,12 +49,17 @@ def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max):
     except:
         return empty_event 
         
-    # Define a cut threshold that the subjets have to meet (i.e. 5% of the original jet pT)
-    jet0_max = jet0.pt
+    # Define a pT cut (between pt_min and pt_max)
+    jet0_max, eta0_max = jet0.pt, jet0.eta
     if jet0_max < pt_min or jet0_max > pt_max:
         return empty_event
     
+    # Define a eta cut (between -eta_cut and +eta_cut)
+    if eta0_max < -eta_cut or eta0_max > eta_cut:
+        return empty_event
+    
     jet0_cut = jet0_max * fcut
+    
     # Grab the subjets by clustering with R1
     subjets = cluster(jet0.constituents_array(), R=R1, p=1)
     subjet_array = subjets.inclusive_jets()
@@ -101,22 +107,27 @@ def process_tower(tower_file):
     if not os.path.exists(h5_dir):
         os.mkdir(h5_dir)
     h5_file_name = path / "data" / "jet_images" / tower_file.parent.stem / f"{tower_file.stem}.h5"
-    if not h5_file_name.exists():
+    pkl_trim_name = path / "data" / "trimmed_jets" / tower_file.parent.stem / f"{tower_file.stem}.pkl"
+    if not h5_file_name.exists() or not pkl_trim_name.exists():
         tower_events = pd.read_hdf(tower_file, "Tower")
         tower_events = tower_events.astype(np.float64)
         entries = len(tower_events.groupby("entry"))
-        jet_images = []
+        jet_images, trimmed_jets = [], []
         for entry, tower in tower_events.groupby("entry"):
-            trimmed_jet = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05, pt_min=300, pt_max=400)
+            trimmed_jet = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05, pt_min=300, pt_max=400, eta_cut=2.0)
             # Pixelize the jet to generate an image
             if len(trimmed_jet) > 1:
                 jet_image = pixelize(trimmed_jet)
                 jet_images.append(jet_image)
+                trimmed_jets.append(trimmed_jet.to_numpy())
         jet_images = np.array(jet_images)
         hf = h5py.File(h5_file_name, "w")
         hf.create_dataset("features", data=jet_images)
         hf.close()
-
+        
+        with open(pkl_trim_name, 'wb') as f:
+            pickle.dump(trimmed_jets, f)
+        
 def towers_2_images():
     # Read tower data exported from root files
     # Convert the tower to a jet-image

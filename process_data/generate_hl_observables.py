@@ -7,7 +7,7 @@ import glob
 path = pathlib.Path.cwd()
 
 for entry in os.scandir('JSS'):
-    if entry.is_file() and "init" not in str(entry):
+    if entry.is_file() and "init" not in str(entry) and "template" not in str(entry):
         string = f'from JSS import {entry.name}'[:-3]
         exec(string)
 
@@ -18,6 +18,7 @@ def load_modules():
     jss_list = glob.glob("JSS/*.py")
     jss_list = [x.split("/")[-1].split(".py")[0] for x in jss_list]
     jss_list.remove("__init__")
+    jss_list.remove("template")
     return jss_list
 
 def generate_hl_observables():

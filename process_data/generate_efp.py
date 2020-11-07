@@ -17,6 +17,10 @@ def efp(data, graph, kappa, beta):
 def generate_efp():
     rinvs = ["0p0", "0p3", "1p0"]
     for rinv in rinvs:
+        data_path = path.parent / "data" / "efp" / rinv
+        if not data_path.exists():
+            os.mkdir(data_path)
+        
         # Choose values for graphs, kappa, beta
         kappas = [-1, 0, 0.5, 1, 2]
         betas = [0.5, 1, 2]

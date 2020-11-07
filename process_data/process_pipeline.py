@@ -4,6 +4,7 @@ from shuffle_sig_bkg import shuffle_sig_bkg
 from generate_prep_data import generate_prep_data
 from generate_efp import generate_efp
 from nnify_efps import nnify_efps
+from generate_hl_observables import generate_hl_observables
 
 
 
@@ -23,6 +24,10 @@ def process_pipeline():
     # Generate prep data for energyflow batch_compute
     print("RUNNING -> generate_prep_data")
     generate_prep_data()
+    
+    # Generate HL Jet Substructure Observables from prep_data file
+    print("RUNNING -> generate_hl_observables")
+    generate_hl_observables()
     
     # Generate EFPs from prep_data
     print("RUNNING -> generate_efp")

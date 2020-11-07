@@ -9,7 +9,7 @@ def calc(X):
         phi = entry[:,2]
         
         # Calculate the observable value at each index ix 
-        obs_value = np.sqrt(np.sum(pT_ix ** 2)) / np.sum(pT_ix)
+        obs_value = np.sqrt(np.sum(pT ** 2)) / np.sum(pT)
 
         # Add the observable value to the output list
         output.append(obs_value)

@@ -31,10 +31,14 @@ def generate_hl_observables():
             print(f"Calculating {JSS_calc} on data set: {rinv}")
             X = pd.read_hdf(hdf_file, "features").features.to_numpy()
             y = pd.read_hdf(hdf_file, "targets").targets
-            JSS_out = np.zeros(X.shape[0])
-            exec("JSS_out[:] = %s.calc(X)[:]" %JSS_calc)
-            JSS_out = pd.DataFrame({JSS_calc:JSS_out})
-            HL_df = pd.concat([HL_df, JSS_out], axis=1)
+            try:
+                JSS_out = np.zeros(X.shape[0])
+                exec("JSS_out[:] = %s.calc(X)[:]" %JSS_calc)
+                JSS_out = pd.DataFrame({JSS_calc:JSS_out})
+                HL_df = pd.concat([HL_df, JSS_out], axis=1)
+            except Exception as e:
+                print(f"JSS calculation for {JSS_calc} on data set {rinv} failed with error:")
+                print(e)
         # HL_df = pd.concat([HL_df, pd.DataFrame({"targets":y})], axis=1)
         h5_file = path.parent / "data" / "jss_observables" / f"HL-{rinv}.h5"
         HL_df.to_hdf(h5_file , key="features", mode="w")

@@ -33,61 +33,41 @@ def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max, eta_cut):
 
     # Cluster the event
     sequence = cluster(tower, R=R0, p=-1)
-    jets = sequence.inclusive_jets(ptmin=3)
-
-    # Empty event if we need to drop out early
-    empty_event = pd.DataFrame({"pt":np.zeros(1) , 
-                                "eta": np.zeros(1), 
-                                "phi": np.zeros(1), 
-                                "mass": np.zeros(1)}
-                              )
+    jets = sequence.inclusive_jets(ptmin=0)
     
-    # Take just the leading jet 
-    # If there isn't one, drop out with an empty event
-    try:
-        jet0 = jets[0]
-    except:
-        return empty_event 
         
-    # Define a pT cut (between pt_min and pt_max)
-    jet0_max, eta0_max = jet0.pt, jet0.eta
-    if jet0_max < pt_min or jet0_max > pt_max:
-        return empty_event
-    
-    # Define a eta cut (between -eta_cut and +eta_cut)
-    if eta0_max < -eta_cut or eta0_max > eta_cut:
-        return empty_event
-    
-    jet0_cut = jet0_max * fcut
-    
-    # Grab the subjets by clustering with R1
-    subjets = cluster(jet0.constituents_array(), R=R1, p=1)
-    subjet_array = subjets.inclusive_jets()
-    for subjet in subjet_array:
-        if subjet.pt > jet0_cut:
-            # Get the subjets pt, eta, phi constituents
-            subjet_data = subjet.constituents_array()
-            subjet_data = struc2arr(subjet_data)
-            pT = subjet_data[:, 0]
-            eta = subjet_data[:, 1]
-            phi = subjet_data[:, 2]
-            mass = subjet_data[:, 3]
+    # check pt and eta cuts
+    if pt_min < jets[0].pt < pt_max and -eta_cut < jets[0].eta < +eta_cut:    
+        # Grab the subjets by clustering with R1
+        subjets = cluster(jets[0].constituents_array(), R=R1, p=1)
+        subjet_array = subjets.inclusive_jets()
+        
+        # For each subjet, check (and trim) based on fcut
+        for subjet in subjet_array:
+            if subjet.pt > jets[0].pt * fcut:
+                # Get the subjets pt, eta, phi constituents
+                subjet_data = subjet.constituents_array()
+                subjet_data = struc2arr(subjet_data)
+                pT = subjet_data[:, 0]
+                eta = subjet_data[:, 1]
+                phi = subjet_data[:, 2]
+                mass = subjet_data[:, 3]
 
-            # Shift all data such that the leading subjet
-            # is located at (eta,phi) = (0,0)
-            eta -= subjet_array[0].eta
-            phi -= subjet_array[0].phi
+                # Shift all data such that the leading subjet
+                # is located at (eta,phi) = (0,0)
+                eta -= subjet_array[0].eta
+                phi -= subjet_array[0].phi
 
-            # Collect the trimmed subjet constituents
-            trim_pt.extend(pT)
-            trim_eta.extend(eta)
-            trim_phi.extend(phi)
-            trim_mass.extend(mass)
+                # Collect the trimmed subjet constituents
+                trim_pt.extend(pT)
+                trim_eta.extend(eta)
+                trim_phi.extend(phi)
+                trim_mass.extend(mass)
 
-    trimmed_jet = pd.DataFrame(
-        {"pt": trim_pt, "eta": trim_eta, "phi": trim_phi, "mass": trim_mass}
-    )
-    return trimmed_jet
+        trimmed_jet = pd.DataFrame(
+            {"pt": trim_pt, "eta": trim_eta, "phi": trim_phi, "mass": trim_mass}
+        )
+        return trimmed_jet
 
 
 def pixelize(jet):
@@ -102,13 +82,15 @@ def pixelize(jet):
     return jet_image
 
 
-def process_tower(tower_file):
+def process_tower(tower_file, save_trimmed):
     h5_dir = path / "data" / "jet_images" / tower_file.parent.stem
     if not os.path.exists(h5_dir):
         os.mkdir(h5_dir)
     h5_file_name = path / "data" / "jet_images" / tower_file.parent.stem / f"{tower_file.stem}.h5"
     pkl_trim_name = path / "data" / "trimmed_jets" / tower_file.parent.stem / f"{tower_file.stem}.pkl"
-    if not h5_file_name.exists() or not pkl_trim_name.exists():
+    if not pkl_trim_name.parent.exists():
+        os.mkdir(pkl_trim_name.parent)
+    if not h5_file_name.exists():
         tower_events = pd.read_hdf(tower_file, "Tower")
         tower_events = tower_events.astype(np.float64)
         entries = len(tower_events.groupby("entry"))
@@ -116,7 +98,7 @@ def process_tower(tower_file):
         for entry, tower in tower_events.groupby("entry"):
             trimmed_jet = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05, pt_min=300, pt_max=400, eta_cut=2.0)
             # Pixelize the jet to generate an image
-            if len(trimmed_jet) > 1:
+            if trimmed_jet is not None:
                 jet_image = pixelize(trimmed_jet)
                 jet_images.append(jet_image)
                 trimmed_jets.append(trimmed_jet.to_numpy())
@@ -125,8 +107,9 @@ def process_tower(tower_file):
         hf.create_dataset("features", data=jet_images)
         hf.close()
         
-        with open(pkl_trim_name, 'wb') as f:
-            pickle.dump(trimmed_jets, f)
+        if save_trimmed:
+            with open(pkl_trim_name, 'wb') as f:
+                pickle.dump(trimmed_jets, f)
         
 def towers_2_images():
     # Read tower data exported from root files
@@ -136,7 +119,7 @@ def towers_2_images():
     t = tqdm(list(pathlib.Path(root_exports_path).rglob("**/*.h5")))
     for root_export in t:
         t.set_description(f"Procesing: {root_export.stem}")
-        process_tower(root_export)
+        process_tower(root_export, save_trimmed=False)
 
 if __name__ == "__main__":
     towers_2_images()

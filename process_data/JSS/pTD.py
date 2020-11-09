@@ -6,8 +6,6 @@ def calc(X):
     for entry in tqdm.tqdm(X):
         # Separate the pT, eta, phi from the entry
         pT = entry[:,0]
-        eta = entry[:,1]
-        phi = entry[:,2]
         
         # Calculate the observable value at each index ix 
         obs_value = np.sqrt(np.sum(pT ** 2)) / np.sum(pT)

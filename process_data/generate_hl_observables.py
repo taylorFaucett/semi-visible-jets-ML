@@ -39,6 +39,7 @@ def generate_hl_observables():
             except Exception as e:
                 print(f"JSS calculation for {JSS_calc} on data set {rinv} failed with error:")
                 print(e)
+                exit()
         # HL_df = pd.concat([HL_df, pd.DataFrame({"targets":y})], axis=1)
         h5_file = path.parent / "data" / "jss_observables" / f"HL-{rinv}.h5"
         HL_df.to_hdf(h5_file , key="features", mode="w")

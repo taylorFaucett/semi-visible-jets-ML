@@ -1,8 +1,9 @@
 import numpy as np
+import tqdm
 
 def calc(X):
     output = []
-    for entry in X:
+    for entry in tqdm.tqdm(X):
         # Separate the pT, eta, phi from the entry
         pT = entry[:,0]
         eta = entry[:,1]

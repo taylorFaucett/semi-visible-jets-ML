@@ -87,9 +87,6 @@ def process_tower(tower_file, save_trimmed):
     if not os.path.exists(h5_dir):
         os.mkdir(h5_dir)
     h5_file_name = path / "data" / "jet_images" / tower_file.parent.stem / f"{tower_file.stem}.h5"
-    pkl_trim_name = path / "data" / "trimmed_jets" / tower_file.parent.stem / f"{tower_file.stem}.pkl"
-    if not pkl_trim_name.parent.exists():
-        os.mkdir(pkl_trim_name.parent)
     if not h5_file_name.exists():
         tower_events = pd.read_hdf(tower_file, "Tower")
         tower_events = tower_events.astype(np.float64)
@@ -108,6 +105,9 @@ def process_tower(tower_file, save_trimmed):
         hf.close()
         
         if save_trimmed:
+            pkl_trim_name = path / "data" / "trimmed_jets" / tower_file.parent.stem / f"{tower_file.stem}.pkl"
+            if not pkl_trim_name.parent.exists():
+                os.mkdir(pkl_trim_name.parent)
             with open(pkl_trim_name, 'wb') as f:
                 pickle.dump(trimmed_jets, f)
         

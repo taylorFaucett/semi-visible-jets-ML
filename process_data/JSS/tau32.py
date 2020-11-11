@@ -115,7 +115,7 @@ def T32(event, beta=1):
     jet = jet_clustering(event, 1)[0]
     t1 = tn(jet, n=1, beta = beta)
     t2 = tn(jet, n=2, beta = beta)
-    t3 = tn(found_jet, n=3)
+    t3 = tn(jet, n=3)
     t32 = t3 / t2 if t2 > 0.0 else 0.0
     if t32<0:
         t32 = 0

@@ -2,7 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 import pathlib
+import h5py
 import glob
+np.warnings.filterwarnings('ignore')
 
 path = pathlib.Path.cwd()
 
@@ -22,24 +24,45 @@ def load_modules():
     return jss_list
 
 def generate_hl_observables():
+    quick_run=False
     JSS_list = load_modules()
     rinvs = ["0p0", "0p3", "1p0"]
     for rinv in rinvs:
-        HL_df = pd.DataFrame()
-        for JSS_calc in JSS_list:
-            prep_data = path.parent / "data" / "processed" / f"{rinv}-prep_data.h5"
-            h5_file = path.parent / "data" / "jss_observables" / f"HL-{rinv}.h5"
-            print(f"Calculating {JSS_calc} on data set: {rinv}")
+        h5_file = path.parent / "data" / "jss_observables" / f"HL-{rinv}.h5"
+        if h5_file.exists():
+            HL_df = pd.read_hdf(h5_file, "features")
+            existing_jss = list(HL_df.columns)
+            print(existing_jss)
+        else:
+            HL_df = pd.DataFrame()
+            jet_mass = pd.DataFrame({"mass": h5py.File(path.parent / "data" / "jss_observables" / f"mass-{rinv}.h5", "r")["mass"][:]})
+            jet_pt = pd.read_feather(path.parent / "data" / "jss_observables" / f"pT-{rinv}.feather")
+            HL_df = pd.concat([jet_mass, jet_pt], axis=1)
+            existing_jss = []
+        prep_data = path.parent / "data" / "processed" / f"{rinv}-prep_data.h5"
+        
+        if quick_run:
+            X = pd.read_hdf(prep_data, "features").features.to_numpy()[:2000]
+            y = pd.read_hdf(prep_data, "targets").targets[:2000]
+        else:
             X = pd.read_hdf(prep_data, "features").features.to_numpy()
             y = pd.read_hdf(prep_data, "targets").targets
-            try:
-                JSS_out = np.zeros(X.shape[0])
-                exec("JSS_out[:] = %s.calc(X)[:]" %JSS_calc)
-                JSS_out = pd.DataFrame({JSS_calc:JSS_out})
-                HL_df = pd.concat([HL_df, JSS_out], axis=1)
-            except Exception as e:
-                print(f"JSS calculation for {JSS_calc} on data set {rinv} failed with error:")
-                print(e)
+        
+        for JSS_calc in JSS_list:
+            print(f"Calculating {JSS_calc} on data set: {rinv}")
+            if JSS_calc not in existing_jss:
+                try:
+                    JSS_out = np.zeros(X.shape[0])
+                    exec("JSS_out[:] = %s.calc(X)[:]" %JSS_calc)
+                    JSS_out = pd.DataFrame({JSS_calc:JSS_out})
+                    HL_df = pd.concat([HL_df, JSS_out], axis=1)
+                    print(HL_df.head())
+                except Exception as e:
+                    print(f"JSS calculation for {JSS_calc} on data set {rinv} failed with error:")
+                    print(e)
+            else:
+                print(f"Skipping: {JSS_calc}")
+
 
             HL_df.to_hdf(h5_file , key="features", mode="w")
             y.to_hdf(h5_file , key="targets", mode="a")

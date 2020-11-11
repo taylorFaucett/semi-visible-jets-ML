@@ -15,6 +15,9 @@ import pathlib
 path = pathlib.Path.cwd().parent
 
 
+def mass_inv(j1, j2):
+    return np.sqrt(2.0 * j1.pt * j2.pt * (np.cosh(j1.eta-j2.eta) - np.cos(j1.phi-j2.phi)))
+
 def struc2arr(x):
     # pyjet outputs a structured array. This converts
     # the 4 component structured array into a simple
@@ -67,7 +70,11 @@ def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max, eta_cut):
         trimmed_jet = pd.DataFrame(
             {"pt": trim_pt, "eta": trim_eta, "phi": trim_phi, "mass": trim_mass}
         )
-        return trimmed_jet
+        
+        m_inv = mass_inv(jets[0], jets[1])
+        return trimmed_jet, m_inv
+    else:
+        return None, None
 
 
 def pixelize(jet):
@@ -82,34 +89,35 @@ def pixelize(jet):
     return jet_image
 
 
-def process_tower(tower_file, save_trimmed):
+def process_tower(tower_file):
     h5_dir = path / "data" / "jet_images" / tower_file.parent.stem
     if not os.path.exists(h5_dir):
         os.mkdir(h5_dir)
     h5_file_name = path / "data" / "jet_images" / tower_file.parent.stem / f"{tower_file.stem}.h5"
-    if not h5_file_name.exists():
+    pkl_trim_name = path / "data" / "trimmed_jets" / tower_file.parent.stem / f"{tower_file.stem}.pkl"
+    if not pkl_trim_name.parent.exists():
+        os.mkdir(pkl_trim_name.parent)
+    if not h5_file_name.exists() or not pkl_trim_name.exists():
         tower_events = pd.read_hdf(tower_file, "Tower")
         tower_events = tower_events.astype(np.float64)
         entries = len(tower_events.groupby("entry"))
-        jet_images, trimmed_jets = [], []
+        jet_images, trimmed_jets, m_invs = [], [], []
         for entry, tower in tower_events.groupby("entry"):
-            trimmed_jet = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05, pt_min=300, pt_max=400, eta_cut=2.0)
+            trimmed_jet, m_inv = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05, pt_min=300, pt_max=400, eta_cut=2.0)
             # Pixelize the jet to generate an image
             if trimmed_jet is not None:
                 jet_image = pixelize(trimmed_jet)
                 jet_images.append(jet_image)
                 trimmed_jets.append(trimmed_jet.to_numpy())
+                m_invs.append(m_inv)
         jet_images = np.array(jet_images)
+        m_invs = np.array(m_invs)
         hf = h5py.File(h5_file_name, "w")
         hf.create_dataset("features", data=jet_images)
+        hf.create_dataset("mass", data=m_invs)
         hf.close()
-        
-        if save_trimmed:
-            pkl_trim_name = path / "data" / "trimmed_jets" / tower_file.parent.stem / f"{tower_file.stem}.pkl"
-            if not pkl_trim_name.parent.exists():
-                os.mkdir(pkl_trim_name.parent)
-            with open(pkl_trim_name, 'wb') as f:
-                pickle.dump(trimmed_jets, f)
+        with open(pkl_trim_name, 'wb') as f:
+            pickle.dump(trimmed_jets, f)
         
 def towers_2_images():
     # Read tower data exported from root files
@@ -119,7 +127,7 @@ def towers_2_images():
     t = tqdm(list(pathlib.Path(root_exports_path).rglob("**/*.h5")))
     for root_export in t:
         t.set_description(f"Procesing: {root_export.stem}")
-        process_tower(root_export, save_trimmed=False)
+        process_tower(root_export)
 
 if __name__ == "__main__":
     towers_2_images()

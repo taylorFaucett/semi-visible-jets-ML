@@ -32,7 +32,6 @@ def generate_hl_observables():
         if h5_file.exists():
             HL_df = pd.read_hdf(h5_file, "features")
             existing_jss = list(HL_df.columns)
-            print(existing_jss)
         else:
             HL_df = pd.DataFrame()
             jet_mass = pd.DataFrame({"mass": h5py.File(path.parent / "data" / "jss_observables" / f"mass-{rinv}.h5", "r")["mass"][:]})
@@ -49,23 +48,23 @@ def generate_hl_observables():
             y = pd.read_hdf(prep_data, "targets").targets
         
         for JSS_calc in JSS_list:
-            print(f"Calculating {JSS_calc} on data set: {rinv}")
             if JSS_calc not in existing_jss:
+                print(f"Calculating {JSS_calc} on data set: {rinv}")
                 try:
                     JSS_out = np.zeros(X.shape[0])
                     exec("JSS_out[:] = %s.calc(X)[:]" %JSS_calc)
                     JSS_out = pd.DataFrame({JSS_calc:JSS_out})
                     HL_df = pd.concat([HL_df, JSS_out], axis=1)
-                    print(HL_df.head())
                 except Exception as e:
                     print(f"JSS calculation for {JSS_calc} on data set {rinv} failed with error:")
                     print(e)
-            else:
-                print(f"Skipping: {JSS_calc}")
 
-
-            HL_df.to_hdf(h5_file , key="features", mode="w")
-            y.to_hdf(h5_file , key="targets", mode="a")
+        # Re-organize columns alphabettically. 
+        # This guarantees the ordering is always the same
+        HL_df = HL_df.reindex(sorted(HL_df.columns), axis=1)
+        print(HL_df.head())
+        HL_df.to_hdf(h5_file , key="features", mode="w")
+        y.to_hdf(h5_file , key="targets", mode="a")
         
 
 if __name__ == "__main__":

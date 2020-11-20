@@ -14,7 +14,7 @@ def calc(X):
                     )
     
 
-    output = hl_graph.batch_compute(X)
+    output = hl_graph.batch_compute(X_trim)
 
     return np.hstack(output)
 

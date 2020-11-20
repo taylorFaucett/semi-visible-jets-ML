@@ -39,14 +39,16 @@ def generate_hl_observables():
             HL_df = pd.concat([jet_mass, jet_pt], axis=1)
             existing_jss = []
         prep_data = path.parent / "data" / "processed" / f"{rinv}-prep_data.h5"
+        trim_data = path.parent / "data" / "processed" / f"trimmed-{rinv}.pkl"
         
         if quick_run:
             X = pd.read_hdf(prep_data, "features").features.to_numpy()[:2000]
+            #X_trim = pd.read_pickle(trim_data)[:20000]
             y = pd.read_hdf(prep_data, "targets").targets[:2000]
         else:
             X = pd.read_hdf(prep_data, "features").features.to_numpy()
-            y = pd.read_hdf(prep_data, "targets").targets
-        
+            #X_trim = pd.read_pickle(trim_data)
+            y = pd.read_hdf(prep_data, "targets").targets        
         for JSS_calc in JSS_list:
             if JSS_calc not in existing_jss:
                 print(f"Calculating {JSS_calc} on data set: {rinv}")
@@ -59,12 +61,12 @@ def generate_hl_observables():
                     print(f"JSS calculation for {JSS_calc} on data set {rinv} failed with error:")
                     print(e)
 
-        # Re-organize columns alphabettically. 
-        # This guarantees the ordering is always the same
-        HL_df = HL_df.reindex(sorted(HL_df.columns), axis=1)
-        print(HL_df.head())
-        HL_df.to_hdf(h5_file , key="features", mode="w")
-        y.to_hdf(h5_file , key="targets", mode="a")
+            # Re-organize columns alphabettically. 
+            # This guarantees the ordering is always the same
+            HL_df = HL_df.reindex(sorted(HL_df.columns), axis=1)
+            print(HL_df)
+            HL_df.to_hdf(h5_file , key="features", mode="w")
+            y.to_hdf(h5_file , key="targets", mode="a")
         
 
 if __name__ == "__main__":

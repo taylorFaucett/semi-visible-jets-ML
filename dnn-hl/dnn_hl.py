@@ -53,12 +53,8 @@ def get_data(rinv, excludes=[], N=None):
     return x, y
 
 def plot_roc(X_test, y_test, rinv):
-    auc_save_file = path / f"auc-{rinv}.txt"
     test_predictions = model.predict(X_test).ravel()
     auc = metrics.roc_auc_score(y_test, test_predictions)    
-    with open(auc_save_file, 'w') as f:
-        f.write(str(auc))
-
     fpr, tpr, thresholds = metrics.roc_curve(y_test, test_predictions)
     background_efficiency = fpr
     signal_efficiency = tpr

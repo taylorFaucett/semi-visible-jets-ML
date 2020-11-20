@@ -34,7 +34,7 @@ def get_data(rinv, N):
     return x, y
 
 def plot_roc(X_test, y_test, rinv):
-    auc_save_file = path / f"auc-{rinv}.txt"
+    auc_save_file = path / "roc_df" / f"auc-{rinv}.txt"
     test_predictions = model.predict(X_test).ravel()
     auc = metrics.roc_auc_score(y_test, test_predictions)    
     with open(auc_save_file, 'w') as f:
@@ -44,15 +44,15 @@ def plot_roc(X_test, y_test, rinv):
     background_efficiency = fpr
     signal_efficiency = tpr
     background_rejection = 1. - background_efficiency
+    
+    roc_df = pd.DataFrame({"sig_eff": signal_efficiency, "bkg_eff": background_efficiency, "bkg_rej": background_rejection})
+    roc_df.to_csv(f'roc_df/{rinv}.csv')
     #background_rejection = 1./fpr
     rinv_str = rinv.replace("p", ".")
     plt.plot(signal_efficiency, background_rejection,
          lw=2, label='$r_{inv} = %s$ ($AUC = %0.3f$)' %(rinv_str, auc))
-#     plt.yscale("log")
     plt.xlabel('Signal efficiency $(\epsilon_S)$')
     plt.ylabel('Background rejection $(1 - \epsilon_B)$')
-#     plt.xlim([0,1])
-#     plt.ylim([0,1])
     plt.title('ROC - CNN on Jet Images')
     plt.legend(loc="lower left")
     plt.savefig(path / "figures" / "cnn_roc.png")

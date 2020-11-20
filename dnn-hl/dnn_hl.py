@@ -45,12 +45,19 @@ def get_data(rinv, excludes=[], N=None):
     return x, y, observable_list
 
 def plot_roc(X_test, y_test, rinv):
+    auc_save_file = path / "roc_df" / f"auc-{rinv}.txt"
     test_predictions = model.predict(X_test).ravel()
     auc = metrics.roc_auc_score(y_test, test_predictions)    
+    with open(auc_save_file, 'w') as f:
+        f.write(str(auc))
+        
     fpr, tpr, thresholds = metrics.roc_curve(y_test, test_predictions)
     background_efficiency = fpr
     signal_efficiency = tpr
     background_rejection = 1. - background_efficiency
+    
+    roc_df = pd.DataFrame({"sig_eff": signal_efficiency, "bkg_eff": background_efficiency, "bkg_rej": background_rejection})
+    roc_df.to_csv(f'roc_df/{rinv}.csv')
     # background_rejection = 1./fpr
     rinv_str = rinv.replace("p", ".")
     plt.plot(signal_efficiency, background_rejection,
@@ -133,12 +140,9 @@ if __name__ == "__main__":
     for rinv in rinvs:
         # Grab jet images and labels
         #excludes = []
-        try:
-            excludes = ['c2b1', 'c2b2', 'c3b1', 'c3b2', 'd2b1', 'd2b2']
-            X, y, observable_list = get_data(rinv=rinv, excludes=excludes)
-        except:
-            excludes = ['c2b1', 'c2b2', 'c3b1', 'd2b1', 'd2b2']
-            X, y, observable_list = get_data(rinv=rinv, excludes=excludes)
+        excludes = ['c2b1', 'c2b2', 'c3b1', 'c3b2', 'd2b1', 'd2b2']
+        X, y, observable_list = get_data(rinv=rinv, excludes=excludes)
+
 
         # Train a new model (or load the existing one if available)
         model, X_test, y_test = train_dnn(X, y, rinv, retrain=False)

@@ -47,38 +47,12 @@ def get_data(rinv, N=None):
         if "c2" in observable or "c3" in observable or "d2" in observable:
             x[observable] = np.log10(1.0+x[observable])
 
-#     x = scale_data(x.to_numpy(), mean=True)
     scaler = preprocessing.StandardScaler()
     x = scaler.fit_transform(x)
     return x, y
 
-def plot_roc(X_test, y_test, rinv):
-    auc_save_file = path / f"auc-{rinv}.txt"
-    test_predictions = model.predict(X_test).ravel()
-    auc = metrics.roc_auc_score(y_test, test_predictions)    
-    with open(auc_save_file, 'w') as f:
-        f.write(str(auc))
 
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, test_predictions)
-    background_efficiency = fpr
-    signal_efficiency = tpr
-    # background_rejection = 1. - background_efficiency
-    background_rejection = 1./fpr
-    rinv_str = rinv.replace("p", ".")
-    plt.plot(signal_efficiency, background_rejection,
-         lw=2, label='$r_{inv} = %s$ ($AUC = %0.3f$)' %(rinv_str, auc))
-    plt.yscale("log")
-    plt.xlabel('Signal efficiency $(\epsilon_S)$')
-    plt.ylabel('Background rejection $(1 / \epsilon_B)$')
-    plt.xlim([0,1])
-    plt.title('ROC - CNN on Jet Images')
-    plt.legend(loc="upper right")
-    plt.savefig(path / "figures" / "cnn_roc.png")
-    plt.savefig(path / "figures" / "cnn_roc.pdf")
-    return auc
-
-
-def train_sherpa_dnn(X, y, rinv):
+def run_sherpa(X, y, rinv):
     # To retrain, remove the old model
     model_file = path / "models" / f"{rinv}.h5"
     epochs = 15
@@ -125,66 +99,7 @@ def train_sherpa_dnn(X, y, rinv):
 
 
 
-def train_dnn(X, y, rinv, retrain=False):
-    # To retrain, remove the old model
-    model_file = path / "models" / f"{rinv}.h5"
-    if retrain and model_file.exists():
-        os.remove(model_file)
-        
-    
-    # Split data for train, test, validation
-    X_train, X_val, y_train, y_val = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-    
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_val, y_val, test_size=0.5, random_state=42
-    )
 
-    # If the model already exists (i.e. we haven't removed the last one) train a new model
-    if model_file.exists():
-        return tf.keras.models.load_model(model_file), X_test, y_test
-    else:
-        
-        optimizer = tf.keras.optimizers.Adagrad(
-    learning_rate=0.001, initial_accumulator_value=0.1, epsilon=1e-07,
-    name='Adagrad'
-)
-        
-        model = tf.keras.models.Sequential()
-        model.add(tf.keras.Input(shape=(X_train.shape[1],)))
-        model.add(tf.keras.layers.Dense(64, activation='relu'))
-        model.add(tf.keras.layers.Dense(64, activation='relu'))
-        model.add(tf.keras.layers.Dense(64, activation='relu'))
-        model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
-
-        model.compile(
-            loss="binary_crossentropy",
-            optimizer=optimizer,
-            metrics=[
-                tf.keras.metrics.AUC(name="auc"),
-                tf.keras.metrics.Accuracy(name="acc"),
-            ],
-        )
-        mc = tf.keras.callbacks.ModelCheckpoint(
-            model_file,
-            verbose=2,
-            save_best_only=True,
-        )
-        es = tf.keras.callbacks.EarlyStopping(verbose=2, patience=10)
-
-        history = model.fit(X_train, 
-                            y_train, 
-                            batch_size = 128, 
-                            epochs=250,
-                            verbose=2,
-                            validation_data=(X_val, y_val),
-                            callbacks=[mc, es],
-                           )
-        
-        return model, X_test, y_test
-
-    
     
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
@@ -195,16 +110,5 @@ if __name__ == "__main__":
         X, y = get_data(rinv, N=20000)
 
         # Train a new model (or load the existing one if available)
-        train_sherpa_dnn(X, y, rinv)
-        
-#         model, X_test, y_test = train_dnn(X, y, rinv, retrain=True)
-
-#         # Plot the ROC curve
-#         auc_val = plot_roc(X_test, y_test, rinv)
-#         print(rinv, auc_val)
-
-#         # Generate predictions for the full dataset
-#         full_predictions = np.concatenate(model.predict(X))
-
-#         # Save the predictions
-#         np.save(path / "predictions" / "ll_predictions.npy", full_predictions)
+        run_sherpa(X, y, rinv)
+    

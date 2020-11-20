@@ -74,50 +74,7 @@ def plot_roc(X_test, y_test, rinv):
     return auc
 
 
-def train_sherpa_dnn(X, y, rinv):
-    # To retrain, remove the old model
-    model_file = path / "models" / f"{rinv}.h5"
-    epochs = 15
-    
-    # Split data for train, test, validation
-    X_train, X_val, y_train, y_val = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-    
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_val, y_val, test_size=0.5, random_state=42
-    )
-
-
-
-    for trial in study:
-        lr = trial.parameters['learning_rate']
-        num_units = trial.parameters['num_units']
-        act = trial.parameters['activation']
-
-        # Create model
-        model = Sequential([Flatten(input_shape=(X_train.shape[1], )),
-                            Dense(num_units, activation=act),
-                            Dense(1, activation='softmax')])
-        
-        
-        optimizer = Adam(lr=lr)
-        model.compile(loss='binary_crossentropy',
-                      optimizer=optimizer,
-                      metrics=['accuracy'])
-
-        # Train model
-        for i in range(epochs):
-            model.fit(X_train, y_train)
-            loss, accuracy = model.evaluate(x_test, y_test)
-            study.add_observation(trial=trial, iteration=i,
-                                  objective=accuracy,
-                                  context={'loss': loss})
-            if study.should_trial_stop(trial):
-                break 
-        
-        study.finalize(trial=trial)    
-
+   
 
 
 
@@ -142,10 +99,7 @@ def train_dnn(X, y, rinv, retrain=False):
         return tf.keras.models.load_model(model_file), X_test, y_test
     else:
         
-        optimizer = tf.keras.optimizers.Adagrad(
-    learning_rate=0.001, initial_accumulator_value=0.1, epsilon=1e-07,
-    name='Adagrad'
-)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False, name='Adam')
         
         model = tf.keras.models.Sequential()
         model.add(tf.keras.Input(shape=(X_train.shape[1],)))
@@ -171,7 +125,7 @@ def train_dnn(X, y, rinv, retrain=False):
 
         history = model.fit(X_train, 
                             y_train, 
-                            batch_size = 256, 
+                            batch_size = 512, 
                             epochs=250,
                             verbose=2,
                             validation_data=(X_val, y_val),

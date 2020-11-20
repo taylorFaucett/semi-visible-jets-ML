@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 from sklearn import metrics, preprocessing
 import os
 import matplotlib.pyplot as plt
-import sherpa
-import sherpa.algorithms.bayesian_optimization as bayesian_optimization
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import tensorflow as tf
@@ -16,13 +14,6 @@ import tensorflow as tf
 import pathlib
 path = pathlib.Path.cwd()
 
-parameters = [sherpa.Continuous('learning_rate', [1e-4, 1e-2]),
-              sherpa.Discrete('num_units', [32, 128]),
-              sherpa.Choice('activation', ['relu', 'tanh', 'sigmoid'])]
-algorithm = bayesian_optimization.GPyOpt(max_num_trials=50)
-study = sherpa.Study(parameters=parameters,
-                     algorithm=algorithm,
-                     lower_is_better=False)
 
 gpus = tf.config.experimental.list_physical_devices("GPU")
 for gpu in gpus:
@@ -48,9 +39,10 @@ def get_data(rinv, excludes=[], N=None):
             x[observable] = np.log10(1.0+x[observable])
 
 #     x = scale_data(x.to_numpy(), mean=True)
+    observable_list = list(x.columns)
     scaler = preprocessing.StandardScaler()
     x = scaler.fit_transform(x)
-    return x, y
+    return x, y, observable_list
 
 def plot_roc(X_test, y_test, rinv):
     test_predictions = model.predict(X_test).ravel()
@@ -62,19 +54,16 @@ def plot_roc(X_test, y_test, rinv):
     background_rejection = 1./fpr
     rinv_str = rinv.replace("p", ".")
     plt.plot(signal_efficiency, background_rejection,
-         lw=2, label='$r_{inv} = %s$ ($AUC = %0.3f$)' %(rinv_str, auc))
+         lw=2, label='$r_{inv} = %s$ (AUC $= %0.4f$)' %(rinv_str, auc))
     plt.yscale("log")
     plt.xlabel('Signal efficiency $(\epsilon_S)$')
     plt.ylabel('Background rejection $(1 / \epsilon_B)$')
     plt.xlim([0,1])
-    plt.title('ROC - CNN on Jet Images')
+    plt.title("HL: " + ", ".join(observable_list))
     plt.legend(loc="upper right")
     plt.savefig(path / "figures" / "cnn_roc.png")
     plt.savefig(path / "figures" / "cnn_roc.pdf")
     return auc
-
-
-   
 
 
 
@@ -144,10 +133,9 @@ if __name__ == "__main__":
         # Grab jet images and labels
         #excludes = []
         excludes = ['c2b1', 'c2b2', 'c3b1', 'd2b1', 'd2b2']
-        X, y = get_data(rinv=rinv, excludes=excludes)
+        X, y, observable_list = get_data(rinv=rinv, excludes=excludes)
 
         # Train a new model (or load the existing one if available)
-
         model, X_test, y_test = train_dnn(X, y, rinv, retrain=False)
 
         # Plot the ROC curve

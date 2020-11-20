@@ -35,11 +35,11 @@ def scale_data(x, mean=True):
         std = 1
     return (x-mean)/std
 
-def get_data(rinv, excludes=[], N=None):        
+def get_data(rinv, N=None):        
     hl_file = path.parent / "data" / "jss_observables" / f"HL-{rinv}.h5"
     x = pd.read_hdf(hl_file, "features")
     y = pd.read_hdf(hl_file, "targets")
-    x = x.drop(excludes, axis=1)
+
     if N is not None:
         x = x.loc[:N-1]
         y = y.loc[:N-1]
@@ -175,7 +175,7 @@ def train_dnn(X, y, rinv, retrain=False):
 
         history = model.fit(X_train, 
                             y_train, 
-                            batch_size = 256, 
+                            batch_size = 128, 
                             epochs=250,
                             verbose=2,
                             validation_data=(X_val, y_val),
@@ -192,20 +192,19 @@ if __name__ == "__main__":
     nodes = 200
     for rinv in rinvs:
         # Grab jet images and labels
-        #excludes = []
-        excludes = ['c2b1', 'c2b2', 'c3b1', 'd2b1', 'd2b2']
-        X, y = get_data(rinv=rinv, excludes=excludes)
+        X, y = get_data(rinv, N=20000)
 
         # Train a new model (or load the existing one if available)
+        train_sherpa_dnn(X, y, rinv)
+        
+#         model, X_test, y_test = train_dnn(X, y, rinv, retrain=True)
 
-        model, X_test, y_test = train_dnn(X, y, rinv, retrain=False)
+#         # Plot the ROC curve
+#         auc_val = plot_roc(X_test, y_test, rinv)
+#         print(rinv, auc_val)
 
-        # Plot the ROC curve
-        auc_val = plot_roc(X_test, y_test, rinv)
-        print(rinv, auc_val)
+#         # Generate predictions for the full dataset
+#         full_predictions = np.concatenate(model.predict(X))
 
-        # Generate predictions for the full dataset
-        full_predictions = np.concatenate(model.predict(X))
-
-        # Save the predictions
-        np.save(path / "predictions" / "ll_predictions.npy", full_predictions)
+#         # Save the predictions
+#         np.save(path / "predictions" / "ll_predictions.npy", full_predictions)

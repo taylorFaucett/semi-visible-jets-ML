@@ -50,17 +50,18 @@ def plot_roc(X_test, y_test, rinv):
     fpr, tpr, thresholds = metrics.roc_curve(y_test, test_predictions)
     background_efficiency = fpr
     signal_efficiency = tpr
-    # background_rejection = 1. - background_efficiency
-    background_rejection = 1./fpr
+    background_rejection = 1. - background_efficiency
+    # background_rejection = 1./fpr
     rinv_str = rinv.replace("p", ".")
     plt.plot(signal_efficiency, background_rejection,
          lw=2, label='$r_{inv} = %s$ (AUC $= %0.4f$)' %(rinv_str, auc))
-    plt.yscale("log")
+#     plt.yscale("log")
     plt.xlabel('Signal efficiency $(\epsilon_S)$')
-    plt.ylabel('Background rejection $(1 / \epsilon_B)$')
-    plt.xlim([0,1])
+    plt.ylabel('Background rejection $(1 - \epsilon_B)$')
+#     plt.xlim([0,1])
+#     plt.ylim([0,1])
     plt.title("HL: " + ", ".join(observable_list))
-    plt.legend(loc="upper right")
+    plt.legend(loc="lower left")
     plt.savefig(path / "figures" / "cnn_roc.png")
     plt.savefig(path / "figures" / "cnn_roc.pdf")
     return auc
@@ -132,8 +133,12 @@ if __name__ == "__main__":
     for rinv in rinvs:
         # Grab jet images and labels
         #excludes = []
-        excludes = ['c2b1', 'c2b2', 'c3b1', 'd2b1', 'd2b2']
-        X, y, observable_list = get_data(rinv=rinv, excludes=excludes)
+        try:
+            excludes = ['c2b1', 'c2b2', 'c3b1', 'c3b2', 'd2b1', 'd2b2']
+            X, y, observable_list = get_data(rinv=rinv, excludes=excludes)
+        except:
+            excludes = ['c2b1', 'c2b2', 'c3b1', 'd2b1', 'd2b2']
+            X, y, observable_list = get_data(rinv=rinv, excludes=excludes)
 
         # Train a new model (or load the existing one if available)
         model, X_test, y_test = train_dnn(X, y, rinv, retrain=False)

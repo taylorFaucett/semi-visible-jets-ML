@@ -74,12 +74,12 @@ def run_sherpa(X, y, rinv):
         act = trial.parameters['activation']
 
         # Create model
-        model = Sequential([Flatten(input_shape=(X_train.shape[1], )),
-                            Dense(num_units, activation=act),
-                            Dense(1, activation='softmax')])
+        model = tf.keras.models.Sequential([tf.keras.layers.Flatten(input_shape=(X_train.shape[1], )),
+                            tf.keras.layers.Dense(num_units, activation=act),
+                            tf.keras.layers.Dense(1, activation='sigmoid')])
         
         
-        optimizer = Adam(lr=lr)
+        optimizer = tf.keras.optimizers.Adam(lr=lr)
         model.compile(loss='binary_crossentropy',
                       optimizer=optimizer,
                       metrics=['accuracy'])
@@ -87,7 +87,7 @@ def run_sherpa(X, y, rinv):
         # Train model
         for i in range(epochs):
             model.fit(X_train, y_train)
-            loss, accuracy = model.evaluate(x_test, y_test)
+            loss, accuracy = model.evaluate(X_test, y_test)
             study.add_observation(trial=trial, iteration=i,
                                   objective=accuracy,
                                   context={'loss': loss})

@@ -64,7 +64,9 @@ def generate_hl_observables():
             # Re-organize columns alphabettically. 
             # This guarantees the ordering is always the same
             HL_df = HL_df.reindex(sorted(HL_df.columns), axis=1)
-            print(HL_df)
+            
+            # Remove any NAN results
+            HL_df = HL_df.fillna(0)
             HL_df.to_hdf(h5_file , key="features", mode="w")
             y.to_hdf(h5_file , key="targets", mode="a")
         

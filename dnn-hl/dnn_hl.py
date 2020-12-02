@@ -139,8 +139,7 @@ if __name__ == "__main__":
     nodes = 200
     for rinv in rinvs:
         # Grab jet images and labels
-        #excludes = []
-        excludes = ['c2b1', 'c2b2', 'c3b1', 'c3b2', 'd2b1', 'd2b2']
+        excludes = []
         X, y, observable_list = get_data(rinv=rinv, excludes=excludes)
 
 

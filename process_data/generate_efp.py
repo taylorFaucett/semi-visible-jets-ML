@@ -15,7 +15,7 @@ def efp(data, graph, kappa, beta):
 
 
 def generate_efp():
-    rinvs = ["0p0", "0p3", "1p0"]
+    rinvs = ["0p3", "0p0", "1p0"]
     for rinv in rinvs:
         data_path = path.parent / "data" / "efp" / rinv
         if not data_path.exists():

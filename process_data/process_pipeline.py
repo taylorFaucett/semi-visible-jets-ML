@@ -5,7 +5,8 @@ from generate_prep_data import generate_prep_data
 from generate_efp import generate_efp
 from nnify_efps import nnify_efps
 from generate_hl_observables import generate_hl_observables
-
+from identify_duplicate_efps import identify_duplicate_efps
+from feather_2_bigHDF import feather_2_bigHDF
 
 
 def process_pipeline():
@@ -36,6 +37,14 @@ def process_pipeline():
     # nn-ify the EFPs
     print("RUNNING -> nnify_efps")
     nnify_efps()
+    
+    # Identify duplicate EFPs
+    print("RUNNING -> identify_duplicate_efps")
+    identify_duplicate_efps()
+    
+    # Merge all EFPs into a single large HDF file
+    print("RUNNING -> feather_2_bigHDF")
+    feather_2_bigHDF()
 
 
 if __name__ == "__main__":

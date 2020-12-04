@@ -24,22 +24,6 @@ import pathlib
 
 path = pathlib.Path.cwd()
 
-parameters = [
-    sherpa.Continuous("learning_rate", [1e-4, 1e-2]),
-    sherpa.Continuous("dropout", [0, 0.5]),
-    sherpa.Discrete("conv_units", [32, 128]),
-    sherpa.Discrete("dense_units", [32, 128]),
-    sherpa.Discrete("conv_layers", [2, 5]),
-    sherpa.Discrete("dense_layers", [2, 5]),
-    sherpa.Discrete("pool_1", [2, 3]),
-    sherpa.Discrete("pool_2", [2, 3]),
-    sherpa.Discrete("kernel_1", [2, 4]),
-    sherpa.Discrete("kernel_2", [2, 4]),
-    sherpa.Choice("activation", ["relu", "tanh", "sigmoid"]),
-]
-algorithm = bayesian_optimization.GPyOpt(max_num_trials=50)
-
-
 def scale_data(x, mean=True):
     mean = np.mean(x)
     std = np.std(x)
@@ -60,12 +44,29 @@ def get_data(rinv, N):
 def run_sherpa(X, y, rinv):
     sherpa_results_file = path / "sherpa_results" / f"{rinv}.npy"
     if sherpa_results_file.exists():
-        return True
+        return sherpa_results_file
+    
+    parameters = [
+        sherpa.Continuous("learning_rate", [1e-4, 1e-2]),
+        sherpa.Continuous("dropout", [0, 0.5]),
+        sherpa.Discrete("filters", [16, 128]),
+        sherpa.Discrete("dense_units", [32, 200]),
+        sherpa.Discrete("conv_blocks", [2, 3]),
+        sherpa.Discrete("dense_layers", [2, 5]),
+        sherpa.Ordinal(name='batch_size', range=[16, 32, 64, 128]),
+        sherpa.Ordinal("pool_1", [2]), #[2,4]
+        sherpa.Ordinal("pool_2", [2]), #[2,4]
+        sherpa.Ordinal("kernel_1", [3]), #[2,3]
+        sherpa.Ordinal("kernel_2", [3]), #[2,3]
+        sherpa.Choice("activation", ["relu"]),
+    ]
+    
+    algorithm = bayesian_optimization.GPyOpt(max_num_trials=50)
 
     study = sherpa.Study(
         parameters=parameters, algorithm=algorithm, lower_is_better=False
     )
-    epochs = 1
+    epochs = 25
 
     # Split data for train, test, validation
     X_train, X_val, y_train, y_val = train_test_split(
@@ -79,11 +80,12 @@ def run_sherpa(X, y, rinv):
     for trial in study:
         # Sherpa settings in trials
         learning_rate = trial.parameters["learning_rate"]
-        conv_units = trial.parameters["conv_units"]
+        batch_size = trial.parameters["batch_size"]
+        filters = trial.parameters["filters"]
         dense_units = trial.parameters["dense_units"]
         activation = trial.parameters["activation"]
         dropout = trial.parameters["dropout"]
-        conv_layers = trial.parameters["conv_layers"]
+        conv_blocks = trial.parameters["conv_blocks"]
         dense_layers = trial.parameters["dense_layers"]
         pool_1 = trial.parameters["pool_1"]
         pool_2 = trial.parameters["pool_2"]
@@ -92,10 +94,10 @@ def run_sherpa(X, y, rinv):
         optimizer = Adam(lr=learning_rate)
 
         model = Sequential()
-        for lix in range(conv_layers):
+        for lix in range(conv_blocks):
             model.add(
                 Conv2D(
-                    conv_units,
+                    filters,
                     (kernel_1, kernel_2),
                     activation=activation,
                     padding="same",
@@ -123,7 +125,7 @@ def run_sherpa(X, y, rinv):
                 / rinv
                 / f"model_{trial.id}.png"
             )
-            model.fit(X_train, y_train)
+            model.fit(X_train, y_train, batch_size=batch_size)
             loss, accuracy, auc = model.evaluate(X_test, y_test)
             study.add_observation(
                 trial=trial,
@@ -149,11 +151,12 @@ def run_sherpa(X, y, rinv):
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
-    N = 100
+    N = 25000
     for rinv in rinvs:
         # Grab jet images and labels
         X, y = get_data(rinv, N)
 
         # Train a new model (or load the existing one if available)
         results_file = run_sherpa(X, y, rinv)
-        print(rinv, results_file)
+        sherpa_selection = np.load(results_file, allow_pickle="TRUE").item()
+        print(rinv, sherpa_selection)

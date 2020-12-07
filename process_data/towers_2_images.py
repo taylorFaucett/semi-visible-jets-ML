@@ -12,11 +12,15 @@ import pickle
 from pyjet.testdata import get_event
 from scipy.stats import binned_statistic_2d
 import pathlib
+
 path = pathlib.Path.cwd().parent
 
 
 def mass_inv(j1, j2):
-    return np.sqrt(2.0 * j1.pt * j2.pt * (np.cosh(j1.eta-j2.eta) - np.cos(j1.phi-j2.phi)))
+    return np.sqrt(
+        2.0 * j1.pt * j2.pt * (np.cosh(j1.eta - j2.eta) - np.cos(j1.phi - j2.phi))
+    )
+
 
 def struc2arr(x):
     # pyjet outputs a structured array. This converts
@@ -37,14 +41,13 @@ def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max, eta_cut):
     # Cluster the event
     sequence = cluster(tower, R=R0, p=-1)
     jets = sequence.inclusive_jets(ptmin=0)
-    
-        
+
     # check pt and eta cuts
-    if pt_min < jets[0].pt < pt_max and -eta_cut < jets[0].eta < +eta_cut:    
+    if pt_min < jets[0].pt < pt_max and -eta_cut < jets[0].eta < +eta_cut:
         # Grab the subjets by clustering with R1
         subjets = cluster(jets[0].constituents_array(), R=R1, p=1)
         subjet_array = subjets.inclusive_jets()
-        
+
         # For each subjet, check (and trim) based on fcut
         for subjet in subjet_array:
             if subjet.pt > jets[0].pt * fcut:
@@ -70,7 +73,7 @@ def jet_trimmer(tower, R0, R1, fcut, pt_min, pt_max, eta_cut):
         trimmed_jet = pd.DataFrame(
             {"pt": trim_pt, "eta": trim_eta, "phi": trim_phi, "mass": trim_mass}
         )
-        
+
         m_inv = mass_inv(jets[0], jets[1])
         return trimmed_jet, m_inv
     else:
@@ -93,8 +96,16 @@ def process_tower(tower_file):
     h5_dir = path / "data" / "jet_images" / tower_file.parent.stem
     if not os.path.exists(h5_dir):
         os.mkdir(h5_dir)
-    h5_file_name = path / "data" / "jet_images" / tower_file.parent.stem / f"{tower_file.stem}.h5"
-    pkl_trim_name = path / "data" / "trimmed_jets" / tower_file.parent.stem / f"{tower_file.stem}.pkl"
+    h5_file_name = (
+        path / "data" / "jet_images" / tower_file.parent.stem / f"{tower_file.stem}.h5"
+    )
+    pkl_trim_name = (
+        path
+        / "data"
+        / "trimmed_jets"
+        / tower_file.parent.stem
+        / f"{tower_file.stem}.pkl"
+    )
     if not pkl_trim_name.parent.exists():
         os.mkdir(pkl_trim_name.parent)
     if not h5_file_name.exists() or not pkl_trim_name.exists():
@@ -103,7 +114,15 @@ def process_tower(tower_file):
         entries = len(tower_events.groupby("entry"))
         jet_images, trimmed_jets, m_invs = [], [], []
         for entry, tower in tower_events.groupby("entry"):
-            trimmed_jet, m_inv = jet_trimmer(tower=tower, R0=1.0, R1=0.2, fcut=0.05, pt_min=300, pt_max=400, eta_cut=2.0)
+            trimmed_jet, m_inv = jet_trimmer(
+                tower=tower,
+                R0=1.0,
+                R1=0.2,
+                fcut=0.05,
+                pt_min=300,
+                pt_max=400,
+                eta_cut=2.0,
+            )
             # Pixelize the jet to generate an image
             if trimmed_jet is not None:
                 jet_image = pixelize(trimmed_jet)
@@ -116,9 +135,10 @@ def process_tower(tower_file):
         hf.create_dataset("features", data=jet_images)
         hf.create_dataset("mass", data=m_invs)
         hf.close()
-        with open(pkl_trim_name, 'wb') as f:
+        with open(pkl_trim_name, "wb") as f:
             pickle.dump(trimmed_jets, f)
-        
+
+
 def towers_2_images():
     # Read tower data exported from root files
     # Convert the tower to a jet-image
@@ -129,8 +149,6 @@ def towers_2_images():
         t.set_description(f"Procesing: {root_export.stem}")
         process_tower(root_export)
 
+
 if __name__ == "__main__":
     towers_2_images()
-    
-    
-    

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score, roc_curve
 import pandas as pd
 
+
 def plot_roc(X_test, y_test, rinv):
     auc_save_file = path / "roc_df" / f"auc-{rinv}.txt"
     test_predictions = model.predict(X_test).ravel()

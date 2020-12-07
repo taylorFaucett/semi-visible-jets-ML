@@ -151,7 +151,6 @@ if __name__ == "__main__":
         dropout = sherpa_results["dropout"]
         layers = sherpa_results["layers"]
         optimizer = Adam(lr=learning_rate)
-        
 
         # Grab jet images and labels
         X, y, observable_list = get_data(rinv=rinv)

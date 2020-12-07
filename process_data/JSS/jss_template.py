@@ -1,15 +1,16 @@
 import numpy as np
 import tqdm
-    
+
+
 def calc(X):
     output = []
     for entry in tqdm.tqdm(X):
         # Separate the pT, eta, phi from the entry
-        pT = entry[:,0]
-        eta = entry[:,1]
-        phi = entry[:,2]
-        
-        # Calculate the observable value at each index ix 
+        pT = entry[:, 0]
+        eta = entry[:, 1]
+        phi = entry[:, 2]
+
+        # Calculate the observable value at each index ix
         # example below is pTD
         obs_value = np.sqrt(np.sum(pT ** 2)) / np.sum(pT)
 
@@ -18,4 +19,3 @@ def calc(X):
 
     # Return full set of values as a 1-D array
     return np.hstack(output)
-

@@ -8,7 +8,9 @@ import pandas as pd
 import glob
 import os
 import pathlib
+
 path = pathlib.Path.cwd()
+
 
 def nn(dfi):
     X, y = dfi["features"].values, dfi["targets"].values
@@ -73,7 +75,9 @@ def nnify_efps():
                 t.set_description(f"Processing {efp_file}")
                 t.refresh()
                 dfi_out = nn(dfi)
-                auc_val = roc_auc_score(dfi_out["targets"].values, dfi_out["nnify"].values)
+                auc_val = roc_auc_score(
+                    dfi_out["targets"].values, dfi_out["nnify"].values
+                )
                 dfi_out.to_feather(efp_file)
                 print("Finished: " + efp_file, auc_val)
 

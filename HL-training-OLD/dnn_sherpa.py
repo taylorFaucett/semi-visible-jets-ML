@@ -28,6 +28,7 @@ parameters = [
 ]
 algorithm = bayesian_optimization.GPyOpt(max_num_trials=50)
 
+
 def get_data(rinv, N=None):
     hl_file = path.parent / "data" / "jss_observables" / f"HL-{rinv}.h5"
     x = pd.read_hdf(hl_file, "features")
@@ -47,11 +48,13 @@ def get_data(rinv, N=None):
 
 def run_sherpa(X, y, rinv):
     # To retrain, remove the old model
-    sherpa_results_file = path / 'sherpa_results' / f'{rinv}.npy'
+    sherpa_results_file = path / "sherpa_results" / f"{rinv}.npy"
     if sherpa_results_file.exists():
         return True
-    
-    study = sherpa.Study(parameters=parameters, algorithm=algorithm, lower_is_better=False)
+
+    study = sherpa.Study(
+        parameters=parameters, algorithm=algorithm, lower_is_better=False
+    )
     epochs = 25
 
     # Split data for train, test, validation
@@ -97,7 +100,7 @@ def run_sherpa(X, y, rinv):
                 print("Stopping Trial {} after {} iterations.".format(trial.id, i + 1))
                 study.finalize(trial=trial, status="STOPPED")
                 break
-                
+
         print("Saving optimized hyperparamter settings")
         study.finalize(trial=trial, status="COMPLETED")
         np.save(sherpa_results_file, study.get_best_result())
@@ -111,4 +114,3 @@ if __name__ == "__main__":
 
         # Train a new model (or load the existing one if available)
         run_sherpa(X, y, rinv)
-

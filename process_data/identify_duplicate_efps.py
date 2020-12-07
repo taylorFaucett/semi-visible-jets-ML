@@ -8,7 +8,9 @@ import itertools
 import os
 from natsort import natsorted
 import pathlib
+
 path = pathlib.Path.cwd()
+
 
 def norm(x):
     normed = (x - min(x)) / (max(x) - min(x))
@@ -95,27 +97,26 @@ def dup_search(rinv):
 
 def move_duplicates(rinv, move_dupes=False):
     uniques = pd.read_feather(f"../data/processed/uniques-{rinv}.feather").values.T[0]
-    duplicates = pd.read_feather(f"../data/processed/duplicates-{rinv}.feather").values.T[0]
+    duplicates = pd.read_feather(
+        f"../data/processed/duplicates-{rinv}.feather"
+    ).values.T[0]
     print(f"Removing N={len(duplicates)} duplicates")
     for bad_file in duplicates:
         source_file = f"../data/efp/{rinv}/{bad_file}.feather"
-        destination_file = (
-            f"../data/efp_duplicates/{rinv}/{bad_file}.feather"
-        )
+        destination_file = f"../data/efp_duplicates/{rinv}/{bad_file}.feather"
         if os.path.exists(source_file):
             print(f"moving {source_file} -> {destination_file}")
             if move_dupes:
                 shutil.move(source_file, destination_file)
 
 
-def identify_duplicate_efps():  
-    rinvs = ['0p0', '0p3', '1p0']
+def identify_duplicate_efps():
+    rinvs = ["0p0", "0p3", "1p0"]
     for rinv in rinvs:
         efp_500(rinv)
         dup_search(rinv)
         move_duplicates(rinv=rinv, move_dupes=True)
-                
+
+
 if __name__ == "__main__":
     identify_duplicate_efps()
-
-

@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 home = os.getcwd()
 
+
 def export_data(root_file, branches):
     events = uproot.open(root_file)["Delphes"]
     pt_eta_phi_mass = events.arrays(
@@ -27,7 +28,9 @@ def root_df():
         if not os.path.exists(rinv_path):
             os.mkdir(rinv_path)
 
-        root_files = glob.glob(os.path.join(home, "data", "root_files","rinv-" + rinv, "*.root")) 
+        root_files = glob.glob(
+            os.path.join(home, "data", "root_files", "rinv-" + rinv, "*.root")
+        )
         for root_file in tqdm(root_files):
             run_name = os.path.basename(root_file).split(".root")[0]
             output_file = os.path.join(home, "root_exports", rinv, run_name + ".h5")

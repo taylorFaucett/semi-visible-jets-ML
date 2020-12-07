@@ -6,7 +6,9 @@ import glob
 import os
 from tqdm import tqdm, trange
 import pathlib
+
 path = pathlib.Path.cwd()
+
 
 def efp(data, graph, kappa, beta):
     EFP_graph = ef.EFP(graph, measure="hadr", kappa=kappa, beta=beta, normed=False)
@@ -20,7 +22,7 @@ def generate_efp():
         data_path = path.parent / "data" / "efp" / rinv
         if not data_path.exists():
             os.mkdir(data_path)
-        
+
         # Choose values for graphs, kappa, beta
         kappas = [-1, 0, 0.5, 1, 2]
         betas = [0.5, 1, 2]
@@ -30,7 +32,7 @@ def generate_efp():
         y = pd.read_hdf(hdf_file, "targets").targets.values
         # All prime graphs with dimension d<=7
         prime_d7 = ef.EFPSet("d<=7", "p==1")
-        
+
         # All prime graphs with dimension d<=8 and chromatic number 4
         chrom_4 = ef.EFPSet("d<=8", "p==1", "c==4")
         efpsets = [prime_d7, chrom_4]
@@ -41,9 +43,15 @@ def generate_efp():
                 for kappa in kappas:
                     for beta in betas:
                         n, e, d, v, k, c, p, h = efpset.specs[efp_ix]
-                        
+
                         # Each prime graph is uniquely identified by an (n,d,k) number
-                        data_file = path.parent / "data" / "efp" / rinv / f"{n}_{d}_{k}_k_{kappa}_b_{beta}.feather"
+                        data_file = (
+                            path.parent
+                            / "data"
+                            / "efp"
+                            / rinv
+                            / f"{n}_{d}_{k}_k_{kappa}_b_{beta}.feather"
+                        )
                         if not os.path.exists(data_file):
                             print(data_file)
                             efp_val = efp(data=X, graph=graph, kappa=kappa, beta=beta)

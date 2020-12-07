@@ -7,6 +7,7 @@ import os
 from tqdm import tqdm, trange
 import matplotlib.pyplot as plt
 import pathlib
+
 path = pathlib.Path.cwd()
 
 
@@ -15,7 +16,7 @@ def generate_prep_data():
     rinvs = ["0p0", "0p3", "1p0"]
     for rinv in rinvs:
         hdf_out = path.parent / "data" / "processed" / f"{rinv}-prep_data.h5"
-        pT_out =  path.parent / "data" / "jss_observables" / f"pT-{rinv}.feather"
+        pT_out = path.parent / "data" / "jss_observables" / f"pT-{rinv}.feather"
         if not hdf_out.exists():
             jet_img_file = path.parent / "data" / "jet_images" / f"LL-{rinv}.h5"
             jet_images = h5py.File(jet_img_file, mode="r")
@@ -41,10 +42,10 @@ def generate_prep_data():
             y0 = pd.DataFrame({"targets": y})
             X0.to_hdf(hdf_out, "features", mode="a")
             y0.to_hdf(hdf_out, "targets", mode="a")
-            
-            pT_df = pd.DataFrame({"pT":raw_pT})
+
+            pT_df = pd.DataFrame({"pT": raw_pT})
             pT_df.to_feather(pT_out)
-            
+
 
 if __name__ == "__main__":
     generate_prep_data()

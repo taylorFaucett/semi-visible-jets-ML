@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def scale_data(x, mean=True):
     mean = np.mean(x)
     std = np.std(x)
@@ -10,6 +11,6 @@ def scale_data(x, mean=True):
 
 def process_data(X):
     X = np.expand_dims(X, axis=-1)
-    #X = np.log(1.0+X) / 4.0 
-    #X = scale_data(X)
+    # X = np.log(1.0+X) / 4.0
+    # X = scale_data(X)
     return X

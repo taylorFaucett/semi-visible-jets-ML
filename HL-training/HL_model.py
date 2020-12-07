@@ -1,5 +1,6 @@
 # Silnence output of tensorflow/keras about GPU status
 import os
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 # Keras imports
@@ -8,7 +9,8 @@ from keras.layers import Dense, Flatten, Dropout, Conv2D, MaxPooling2D
 from keras.optimizers import Adam
 from keras import metrics
 
-def HL_model(tp, input_shape):    
+
+def HL_model(tp, input_shape):
     model = Sequential()
     model.add(Flatten(input_shape=(input_shape,)))
     model.add(Dense(tp["dense_units_1"], activation="relu"))
@@ -20,7 +22,7 @@ def HL_model(tp, input_shape):
 
     model.compile(
         loss="binary_crossentropy",
-        optimizer=Adam(lr=tp['learning_rate']),
+        optimizer=Adam(lr=tp["learning_rate"]),
         metrics=["accuracy", metrics.AUC(name="auc")],
     )
     return model

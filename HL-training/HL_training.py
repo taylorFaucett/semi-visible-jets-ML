@@ -7,12 +7,14 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import keras
 import pathlib
+
 path = pathlib.Path.cwd()
 
 # Import homemade tools
 from get_data import get_data
 from HL_model import HL_model
 from plot_roc import plot_roc
+
 
 def train_HL(rinv, retrain=False):
     # To retrain, remove the old model
@@ -22,7 +24,7 @@ def train_HL(rinv, retrain=False):
 
     # Trainig parameters from the sherpa optimization
     tp = np.load(f"sherpa_results/{rinv}.npy", allow_pickle="TRUE").item()
-    
+
     X, y = get_data(rinv)
 
     X_train, X_val, y_train, y_val = train_test_split(
@@ -32,13 +34,15 @@ def train_HL(rinv, retrain=False):
     X_val, X_test, y_val, y_test = train_test_split(
         X_val, y_val, test_size=0.5, random_state=42
     )
-    
+
     model = HL_model(tp=tp, input_shape=X_train.shape[1])
-    callbacks = [keras.callbacks.EarlyStopping(patience=10, verbose=1),
-                 keras.callbacks.ModelCheckpoint(filepath=model_file, verbose=1, save_best_only=True),
-                ]
-    
-    
+    callbacks = [
+        keras.callbacks.EarlyStopping(patience=10, verbose=1),
+        keras.callbacks.ModelCheckpoint(
+            filepath=model_file, verbose=1, save_best_only=True
+        ),
+    ]
+
     history = model.fit(
         X_train,
         y_train,
@@ -46,8 +50,8 @@ def train_HL(rinv, retrain=False):
         verbose=2,
         batch_size=int(tp["batch_size"]),
         validation_data=(X_val, y_val),
-        callbacks=callbacks
-        )
+        callbacks=callbacks,
+    )
 
     return model, X_test, y_test
 

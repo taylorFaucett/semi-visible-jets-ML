@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import keras
 import pathlib
+
 path = pathlib.Path.cwd()
 
 # Import homemade tools
@@ -14,14 +15,15 @@ from process_data import process_data
 from cnn_model import cnn_model
 from plot_roc import plot_roc
 
+
 def test_val_set(rinv, split):
     f = h5py.File(path.parent / "data" / "jet_images" / f"LL-{rinv}.h5", "r")
     N = f["targets"].shape[0]
     if split == "val":
-        a = int(N*0.8)
-        b = int(N*0.9)
+        a = int(N * 0.8)
+        b = int(N * 0.9)
     if split == "test":
-        a = int(N*0.9)
+        a = int(N * 0.9)
         b = -1
     X = f["features"][a:b]
     y = f["targets"][a:b]
@@ -55,23 +57,26 @@ def train_cnn(rinv, retrain=False):
     # Trainig parameters from the sherpa optimization
     tp = np.load(f"sherpa_results/{rinv}.npy", allow_pickle="TRUE").item()
     model = cnn_model(tp)
-    
+
     training_data = generator(rinv=rinv, batch_size=tp["batch_size"])
     _, X_test, y_test = test_val_set(rinv=rinv, split="test")
     N_size, X_val, y_val = test_val_set(rinv=rinv, split="val")
-    
-    callbacks = [keras.callbacks.EarlyStopping(patience=10, verbose=1),
-                 keras.callbacks.ModelCheckpoint(filepath=model_file, verbose=1, save_best_only=True),
-                ]
-    
+
+    callbacks = [
+        keras.callbacks.EarlyStopping(patience=10, verbose=1),
+        keras.callbacks.ModelCheckpoint(
+            filepath=model_file, verbose=1, save_best_only=True
+        ),
+    ]
+
     history = model.fit(
         training_data,
         epochs=200,
         verbose=2,
-        steps_per_epoch = int(N_size * 0.80) // tp["batch_size"],
+        steps_per_epoch=int(N_size * 0.80) // tp["batch_size"],
         validation_data=(X_val, y_val),
-        callbacks=callbacks
-        )
+        callbacks=callbacks,
+    )
 
     return model, X_test, y_test
 
@@ -90,6 +95,6 @@ if __name__ == "__main__":
 #         X = generator(rinv=rinv, batch_size=batch_size, fullSet=True)
 #         full_predictions = model.predict(X) #np.concatenate(model.predict(X))
 #         print(full_predictions)
-        
+
 #         # Save the predictions
 #         np.save(path / "predictions" / "ll_predictions.npy", full_predictions)

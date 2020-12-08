@@ -1,0 +1,1 @@
+rsync -chavzP --stats tfaucett@uclhc-1.ps.uci.edu:/DFS-L/DATA/atlas/whiteson/Ntag ~/Dropbox/Projects/nProng-object-detection/data/ > rsync.log

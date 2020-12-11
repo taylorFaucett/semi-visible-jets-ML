@@ -43,7 +43,10 @@ def run_sherpa(rinv):
     parameters, algorithm = setup_sherpa(max_num_trials)
     study_output_file = path / "sherpa_results" / f"study_{rinv}.csv"
     study = sherpa.Study(
-        parameters=parameters, algorithm=algorithm, lower_is_better=False, disable_dashboard=True
+        parameters=parameters,
+        algorithm=algorithm,
+        lower_is_better=False,
+        disable_dashboard=True,
     )
 
     X, y = get_data(rinv, N)
@@ -74,7 +77,6 @@ def run_sherpa(rinv):
         )
         np.save(sherpa_results_file, study.get_best_result())
         study.finalize(trial=trial, status="COMPLETED")
-        
 
 
 if __name__ == "__main__":

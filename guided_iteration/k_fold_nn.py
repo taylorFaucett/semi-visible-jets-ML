@@ -9,9 +9,10 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import tensorflow as tf
 
-gpus = tf.config.experimental.list_physical_devices('GPU')
+gpus = tf.config.experimental.list_physical_devices("GPU")
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
+
 
 def nn(
     X_train,
@@ -46,12 +47,12 @@ def nn(
         amsgrad=True,
         name="Adam",
     )
-    
+
     initializer = tf.keras.initializers.GlorotUniform()
 
-#     optimizer = tf.keras.optimizers.SGD(
-#         learning_rate=lr_init, momentum=0.0, nesterov=False, name="SGD"
-#     )
+    #     optimizer = tf.keras.optimizers.SGD(
+    #         learning_rate=lr_init, momentum=0.0, nesterov=False, name="SGD"
+    #     )
 
     model.add(tf.keras.layers.Flatten(input_dim=X_train.shape[1]))
     for lix in range(layers):
@@ -62,9 +63,9 @@ def nn(
                 activation="relu",
                 kernel_constraint=tf.keras.constraints.MaxNorm(3),
                 bias_constraint=tf.keras.constraints.MaxNorm(3),
-#                 kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
-#                 bias_regularizer=tf.keras.regularizers.l2(1e-4),
-#                 activity_regularizer=tf.keras.regularizers.l2(1e-5)
+                #                 kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
+                #                 bias_regularizer=tf.keras.regularizers.l2(1e-4),
+                #                 activity_regularizer=tf.keras.regularizers.l2(1e-5)
             )
         )
         if lix <= layers - 2:
@@ -105,6 +106,7 @@ def nn(
 
     return model
 
+
 def k_fold_nn(run_name, n_folds):
     home = "/home/tfaucett/Projects/ado-iteration"
     data_dir = f"{home}/data"
@@ -119,7 +121,7 @@ def k_fold_nn(run_name, n_folds):
     k_fold_file = f"{home}/guided-iteration/k_fold_nn.py"
     k_fold_copy = f"{it_dir}/k_fold_copy.py"
     shutil.copy(k_fold_file, k_fold_copy)
-    
+
     # Get selected efps
     efps = pd.read_csv(f"{it_dir}/selected_efps.csv").efp.values[1:]
     print(efps)
@@ -127,11 +129,11 @@ def k_fold_nn(run_name, n_folds):
         selected_efps=efps,
         data_dir=data_dir,
         efp_dir=efp_dir,
-        incl_hl=False, 
-        incl_pt=True, 
+        incl_hl=False,
+        incl_pt=True,
         incl_mass_only=True,
         normalize=False,
-    )   
+    )
     X = X.to_numpy()
     kf = KFold(n_splits=n_folds, random_state=None, shuffle=False)
     kf.get_n_splits(X)
@@ -150,7 +152,7 @@ def k_fold_nn(run_name, n_folds):
                 X_val=X_test,
                 y_val=y_test,
                 epochs=1000,
-                batch_size=1024, #32
+                batch_size=1024,  # 32
                 layers=3,
                 nodes=300,
                 ix=kix,
@@ -170,6 +172,7 @@ def k_fold_nn(run_name, n_folds):
     auc_avg = np.average(aucs)
     auc_std = np.std(aucs)
     print(f"AUC = {auc_avg} ± {auc_std}")
+
 
 if __name__ == "__main__":
     run_name = "black-box-noNN"

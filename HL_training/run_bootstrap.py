@@ -1,5 +1,6 @@
 # Standard Imports
 import os
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import pandas as pd
@@ -40,7 +41,7 @@ def run_bootstraps(rinv):
         roc_file = bs_path / "roc" / f"roc_{bs_count}.csv"
         if not model_file.parent.exists():
             os.mkdir(model_file.parent)
-            
+
         if not roc_file.parent.exists():
             os.mkdir(roc_file.parent)
 
@@ -48,12 +49,12 @@ def run_bootstraps(rinv):
             model = get_model(tp=tp, input_shape=X_train.shape[1])
             callbacks = [
                 keras.callbacks.EarlyStopping(
-                    monitor='val_auc',
-                    patience=2, 
+                    monitor="val_auc",
+                    patience=2,
                     min_delta=0.0001,
-                    verbose=0, 
+                    verbose=0,
                     restore_best_weights=True,
-                    mode="max"
+                    mode="max",
                 ),
                 keras.callbacks.ModelCheckpoint(
                     filepath=model_file, verbose=0, save_best_only=True
@@ -77,7 +78,7 @@ def run_bootstraps(rinv):
         auc_val = roc_auc_score(y_val, val_predictions)
         straps.append(bs_count)
         aucs.append(auc_val)
-        
+
         fpr, tpr, thresholds = roc_curve(y_val, val_predictions)
         background_efficiency = fpr
         signal_efficiency = tpr
@@ -90,9 +91,9 @@ def run_bootstraps(rinv):
                 "bkg_rej": background_rejection,
             }
         )
-        
+
         roc_df.to_csv(roc_file)
-        
+
         results = pd.DataFrame({"bs": straps, "auc": aucs})
         results.to_csv(bs_path / "aucs.csv")
         auc_mean = np.average(aucs)

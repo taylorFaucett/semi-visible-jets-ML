@@ -14,7 +14,8 @@ import h5py
 path = pathlib.Path.cwd()
 plt.rcParams["font.family"] = "serif"
 
-np.seterr(divide = 'ignore') 
+np.seterr(divide="ignore")
+
 
 def norm(x):
     normed = (x - min(x)) / (max(x) - min(x))
@@ -199,9 +200,12 @@ class visualization:
             .efp
         )
         efps = h5py.File(path.parent / "data" / "efps.h5", "r")
-        efp_data, targets = efps["efps"][efp_max][:], efps["targets"][:] #pd.read_feather(f"{efp_dir}/{efp_max}.feather")
-        efp_data = pd.DataFrame({"features":efp_data, "targets":targets})
-        
+        efp_data, targets = (
+            efps["efps"][efp_max][:],
+            efps["targets"][:],
+        )  # pd.read_feather(f"{efp_dir}/{efp_max}.feather")
+        efp_data = pd.DataFrame({"features": efp_data, "targets": targets})
+
         # Select dif-order indices
         dif_X0 = np.log10(efp_data.iloc[idx0]["features"].values)
         dif_X1 = np.log10(efp_data.iloc[idx1]["features"].values)

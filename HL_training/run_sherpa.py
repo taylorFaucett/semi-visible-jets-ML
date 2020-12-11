@@ -7,11 +7,11 @@ import tqdm
 from sklearn.model_selection import train_test_split
 import pathlib
 
-path = pathlib.Path.cwd()
-
 # Import homemade tools
 from get_data import get_data
 from get_model import get_model
+
+path = pathlib.Path.cwd()
 
 
 def setup_sherpa(max_num_trials):
@@ -41,7 +41,7 @@ def run_sherpa(rinv):
         parameters=parameters, algorithm=algorithm, lower_is_better=False
     )
 
-    X, y = get_data(rinv, N)
+    X, y = get_data(rinv)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.8, random_state=42
     )
@@ -73,7 +73,6 @@ def run_sherpa(rinv):
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
-    N = 100000
     max_num_trials = 100
     trial_epochs = 15
 

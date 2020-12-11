@@ -26,60 +26,19 @@ def get_model(tp):
             (3, 3),
             padding="same",
             activation="relu",
-            # kernel_constraint=max_norm(3),
-            # bias_constraint=max_norm(3),
             input_shape=(32, 32, 1),
         )
     )
     model.add(MaxPooling2D((2, 2)))
-    model.add(
-        Conv2D(
-            tp["filter_2"],
-            (3, 3),
-            padding="same",
-            activation="relu",
-            # kernel_constraint=max_norm(3),
-            # bias_constraint=max_norm(3),
-        )
-    )
-    model.add(
-        Conv2D(
-            tp["filter_3"],
-            (3, 3),
-            padding="same",
-            activation="relu",
-            # kernel_constraint=max_norm(3),
-            # bias_constraint=max_norm(3),
-        )
-    )
+    model.add(Conv2D(tp["filter_2"], (3, 3), padding="same", activation="relu",))
+    model.add(Conv2D(tp["filter_3"], (3, 3), padding="same", activation="relu",))
 
     model.add(Flatten())
-    model.add(
-        Dense(
-            tp["dense_units_1"],
-            activation="relu",
-            # kernel_constraint=max_norm(3),
-            # bias_constraint=max_norm(3),
-        )
-    )
+    model.add(Dense(tp["dense_units_1"], activation="relu",))
     model.add(Dropout(tp["dropout_1"]))
-    model.add(
-        Dense(
-            tp["dense_units_2"],
-            activation="relu",
-            # kernel_constraint=max_norm(3),
-            # bias_constraint=max_norm(3),
-        )
-    )
+    model.add(Dense(tp["dense_units_2"], activation="relu",))
     model.add(Dropout(tp["dropout_2"]))
-    model.add(
-        Dense(
-            tp["dense_units_3"],
-            activation="relu",
-            # kernel_constraint=max_norm(3),
-            # bias_constraint=max_norm(3),
-        )
-    )
+    model.add(Dense(tp["dense_units_3"], activation="relu",))
     model.add(Dense(1, activation="sigmoid"))
 
     model.compile(

@@ -114,8 +114,8 @@ def run_bootstraps(rinv):
 
 
 if __name__ == "__main__":
-    rinvs = ["0p0", "0p3", "1p0"]
-    n_splits = 2
+    rinvs = ["1p0", "0p3", "0p0"]
+    n_splits = 200
     epochs = 200
     for rinv in rinvs:
         run_bootstraps(rinv)

@@ -59,12 +59,14 @@ def bootstrap_runner(run_number):
 
         val_predictions = np.hstack(model.predict(X_val))
         auc_val = roc_auc_score(y_val, val_predictions)
-        ado_val = calc_ado(fx=val_predictions, gx=np.hstack(ll_val), target=y_val, n_pairs=1000000)
+        ado_val = calc_ado(
+            fx=val_predictions, gx=np.hstack(ll_val), target=y_val, n_pairs=1000000
+        )
         straps.append(bs_count)
         aucs.append(auc_val)
         ados.append(ado_val)
-        
-        results = pd.DataFrame({"bs": straps, "auc": aucs, "ado":ados})
+
+        results = pd.DataFrame({"bs": straps, "auc": aucs, "ado": ados})
         results.to_csv(
             path
             / "runs"
@@ -74,13 +76,15 @@ def bootstrap_runner(run_number):
         bs_count += 1
         auc_mean = np.average(aucs)
         auc_std = np.std(aucs)
-        
+
         ado_mean = np.average(ados)
         ado_std = np.std(ados)
-        
+
         counter += 1
-        t.set_description(f"Run ({counter}/{n_splits}): (AUC = {auc_mean:.5f} +/- {auc_std:.5f} , ADO = {ado_mean:.5f} +/- {ado_std:.5f}")
-        t.refresh() # to show immediately the update
+        t.set_description(
+            f"Run ({counter}/{n_splits}): (AUC = {auc_mean:.5f} +/- {auc_std:.5f} , ADO = {ado_mean:.5f} +/- {ado_std:.5f}"
+        )
+        t.refresh()  # to show immediately the update
 
 
 if __name__ == "__main__":

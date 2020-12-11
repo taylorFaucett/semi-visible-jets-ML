@@ -103,7 +103,7 @@ def move_duplicates(rinv, move_dupes=False):
     print(f"Removing N={len(duplicates)} duplicates")
     for bad_file in duplicates:
         source_file = f"../data/efp/{rinv}/{bad_file}.feather"
-        destination_file = f"../data/efp_duplicates/{rinv}/{bad_file}.feather"
+        destination_file = f"../data/efp/efp_duplicates/{rinv}/{bad_file}.feather"
         if os.path.exists(source_file):
             print(f"moving {source_file} -> {destination_file}")
             if move_dupes:

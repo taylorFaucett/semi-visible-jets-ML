@@ -19,7 +19,7 @@ def setup_sherpa(max_num_trials):
         sherpa.Continuous("learning_rate", [1e-4, 1e-2], "log"),
         sherpa.Continuous("dropout_1", [0, 0.5]),
         sherpa.Continuous("dropout_2", [0, 0.5]),
-        sherpa.Ordinal(name="batch_size", range=[32, 64, 128]),
+        sherpa.Ordinal(name="batch_size", range=[256, 512, 1024]),
         sherpa.Discrete("dense_units_1", [32, 400]),
         sherpa.Discrete("dense_units_2", [32, 400]),
         sherpa.Discrete("dense_units_3", [32, 400]),
@@ -41,7 +41,7 @@ def run_sherpa(rinv):
         parameters=parameters, algorithm=algorithm, lower_is_better=False
     )
 
-    X, y = get_data(rinv)
+    X, y = get_data(rinv, N)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.8, random_state=42
     )
@@ -67,12 +67,13 @@ def run_sherpa(rinv):
         t.set_description(
             f"Trial {trial.id}; rinv={rinv.replace('p','.')} -> Test AUC = {auc:.4}"
         )
-        study.finalize(trial=trial, status="COMPLETED")
         np.save(sherpa_results_file, study.get_best_result())
-
+        study.finalize(trial=trial, status="COMPLETED")
+        
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
+    N = 200000
     max_num_trials = 100
     trial_epochs = 15
 

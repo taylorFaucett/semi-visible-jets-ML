@@ -45,8 +45,7 @@ def run_sherpa(rinv):
     study = sherpa.Study(
         parameters=parameters,
         algorithm=algorithm,
-        lower_is_better=False,
-        disable_dashboard=True,
+        lower_is_better=False
     )
 
     X, y = get_data(rinv, N)

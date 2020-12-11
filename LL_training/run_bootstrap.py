@@ -10,6 +10,7 @@ from sklearn.metrics import roc_auc_score, roc_curve
 from tqdm import tqdm
 import keras
 import pathlib
+import gc
 
 path = pathlib.Path.cwd()
 
@@ -24,9 +25,9 @@ def run_bootstraps(rinv):
     X, y = get_data(rinv)
 
     n = len(y)
-    rs = ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.15)
+    rs = ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.10)
     rs.get_n_splits(X)
-    ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.15)
+    ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.10)
     straps = []
     aucs = []
     bs_count = 0
@@ -38,11 +39,15 @@ def run_bootstraps(rinv):
         y_train = y[train_index]
         X_val = X[test_index]
         y_val = y[test_index]
+
+        bs_path = path / "bootstrap_results" / rinv
         model_file = bs_path / "models" / f"bs_{bs_count}.h5"
         roc_file = bs_path / "roc" / f"roc_{bs_count}.csv"
+
+        if not bs_path.exists():
+            os.mkdir(bs_path)
         if not model_file.parent.exists():
             os.mkdir(model_file.parent)
-
         if not roc_file.parent.exists():
             os.mkdir(roc_file.parent)
 
@@ -92,7 +97,6 @@ def run_bootstraps(rinv):
                 "bkg_rej": background_rejection,
             }
         )
-
         roc_df.to_csv(roc_file)
 
         results = pd.DataFrame({"bs": straps, "auc": aucs})
@@ -106,18 +110,12 @@ def run_bootstraps(rinv):
             f"rinv={rinv} ({counter}/{n_splits}): (AUC = {auc_mean:.4f} +/- {auc_ci_max:.4f}"
         )
         t.refresh()
-        if counter >= early_end:
-            return
+        gc.collect()
 
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
-    n_splits = 200
-    early_ends = [2, 5, 25, 100, 200]
+    n_splits = 2
     epochs = 200
-    for early_end in early_ends:
-        for rinv in rinvs:
-            bs_path = path / "bootstrap_results" / rinv
-            if not bs_path.exists():
-                os.mkdir(bs_path)
-            run_bootstraps(rinv)
+    for rinv in rinvs:
+        run_bootstraps(rinv)

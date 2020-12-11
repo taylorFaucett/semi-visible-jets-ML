@@ -24,14 +24,9 @@ def setup_sherpa(max_num_trials):
         sherpa.Discrete("filter_1", [16, 128]),
         sherpa.Discrete("filter_2", [16, 128]),
         sherpa.Discrete("filter_3", [16, 128]),
-        sherpa.Ordinal("kernel_1", [3]),
-        sherpa.Ordinal("kernel_2", [3]),
-        sherpa.Ordinal("kernel_3", [3]),
         sherpa.Discrete("dense_units_1", [25, 200]),
         sherpa.Discrete("dense_units_2", [25, 200]),
         sherpa.Discrete("dense_units_3", [25, 200]),
-        sherpa.Ordinal("pool_1", [2]),
-        sherpa.Ordinal("pool_2", [2]),
     ]
 
     algorithm = sherpa.algorithms.bayesian_optimization.GPyOpt(
@@ -46,8 +41,9 @@ def run_sherpa(rinv):
         return sherpa_results_file
 
     parameters, algorithm = setup_sherpa(max_num_trials)
+    study_output_file = path / "sherpa_results" / f"study_{rinv}.csv"
     study = sherpa.Study(
-        parameters=parameters, algorithm=algorithm, lower_is_better=False
+        parameters=parameters, algorithm=algorithm, lower_is_better=False, disable_dashboard=True
     )
 
     X, y = get_data(rinv, N)
@@ -76,13 +72,14 @@ def run_sherpa(rinv):
         t.set_description(
             f"Trial {trial.id}; rinv={rinv.replace('p','.')} -> Test AUC = {auc:.4}"
         )
-        study.finalize(trial=trial, status="COMPLETED")
         np.save(sherpa_results_file, study.get_best_result())
+        study.finalize(trial=trial, status="COMPLETED")
+        
 
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
-    N = 100000
+    N = 200000
     max_num_trials = 100
     trial_epochs = 15
     for rinv in rinvs:

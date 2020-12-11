@@ -22,12 +22,9 @@ def run_bootstraps(rinv):
     tp = np.load(f"sherpa_results/{rinv}.npy", allow_pickle="TRUE").item()
     X, y = get_data(rinv)
 
-    n = len(y)
-    n_train = int(0.85 * n)
-    n_test = int(0.15 * n)
-    rs = ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.15)
+    rs = ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.1)
     rs.get_n_splits(X)
-    ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.15)
+    ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.1)
     straps = []
     aucs = []
     bs_count = 0

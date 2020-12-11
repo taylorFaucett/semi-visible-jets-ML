@@ -52,7 +52,7 @@ def generate_efp():
                             / rinv
                             / f"{n}_{d}_{k}_k_{kappa}_b_{beta}.feather"
                         )
-                        if not os.path.exists(data_file):
+                        if not data_file.exists():
                             print(data_file)
                             efp_val = efp(data=X, graph=graph, kappa=kappa, beta=beta)
                             efp_df = pd.DataFrame({f"features": efp_val, f"targets": y})

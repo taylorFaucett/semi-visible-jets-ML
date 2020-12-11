@@ -3,6 +3,7 @@ import pandas as pd
 import h5py
 import numpy as np
 import os
+import json
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import keras
@@ -55,7 +56,9 @@ def train_cnn(rinv, retrain=False):
         os.remove(model_file)
 
     # Trainig parameters from the sherpa optimization
-    tp = np.load(f"sherpa_results/{rinv}.npy", allow_pickle="TRUE").item()
+    tp_file = open(f"sherpa_results/{rinv}.json", "r")
+    tp = json.load(tp_file)
+    tp.close()
     model = get_model(tp)
 
     training_data = generator(rinv=rinv, batch_size=tp["batch_size"])

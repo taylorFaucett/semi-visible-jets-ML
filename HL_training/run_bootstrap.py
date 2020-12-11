@@ -28,20 +28,23 @@ def run_bootstraps(rinv):
     ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.1)
     straps = []
     aucs = []
-    bs_count = 0
+    boot_ix = 0
     t = tqdm(list(rs.split(X)))
-    counter = 0
 
     for train_index, test_index in t:
         X_train = X[train_index]
         y_train = y[train_index]
         X_val = X[test_index]
         y_val = y[test_index]
-        model_file = bs_path / "models" / f"bs_{bs_count}.h5"
-        roc_file = bs_path / "roc" / f"roc_{bs_count}.csv"
+
+        bs_path = path / "bootstrap_results" / rinv
+        model_file = bs_path / "models" / f"bs_{boot_ix}.h5"
+        roc_file = bs_path / "roc" / f"roc_{boot_ix}.csv"
+
+        if not bs_path.exists():
+            os.mkdir(bs_path)
         if not model_file.parent.exists():
             os.mkdir(model_file.parent)
-
         if not roc_file.parent.exists():
             os.mkdir(roc_file.parent)
 
@@ -50,7 +53,7 @@ def run_bootstraps(rinv):
             callbacks = [
                 keras.callbacks.EarlyStopping(
                     monitor="val_auc",
-                    patience=2,
+                    patience=10,
                     min_delta=0.0001,
                     verbose=0,
                     restore_best_weights=True,
@@ -76,7 +79,7 @@ def run_bootstraps(rinv):
 
         val_predictions = np.hstack(model.predict(X_val))
         auc_val = roc_auc_score(y_val, val_predictions)
-        straps.append(bs_count)
+        straps.append(boot_ix)
         aucs.append(auc_val)
 
         fpr, tpr, thresholds = roc_curve(y_val, val_predictions)
@@ -99,24 +102,16 @@ def run_bootstraps(rinv):
         auc_mean = np.average(aucs)
         auc_ci = np.percentile(aucs, (2.5, 97.5))
         auc_ci_max = max(np.abs(auc_ci[0] - auc_mean), np.abs(auc_ci[1] - auc_mean))
-        bs_count += 1
-        counter += 1
+        boot_ix += 1
         t.set_description(
-            f"rinv={rinv} ({counter}/{n_splits}): (AUC = {auc_mean:.4f} +/- {auc_ci_max:.4f}"
+            f"rinv={rinv} ({boot_ix}/{n_splits}): (AUC = {auc_mean:.4f} +/- {auc_ci_max:.4f}"
         )
         t.refresh()
-        if counter >= early_end:
-            return
 
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
     n_splits = 200
-    early_ends = [2, 5, 25, 100, 200]
     epochs = 200
-    for early_end in early_ends:
-        for rinv in rinvs:
-            bs_path = path / "bootstrap_results" / rinv
-            if not bs_path.exists():
-                os.mkdir(bs_path)
-            run_bootstraps(rinv)
+    for rinv in rinvs:
+        run_bootstraps(rinv)

@@ -24,15 +24,13 @@ def run_bootstraps(rinv):
     tp = np.load(f"sherpa_results/{rinv}.npy", allow_pickle="TRUE").item()
     X, y = get_data(rinv)
 
-    n = len(y)
     rs = ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.10)
     rs.get_n_splits(X)
     ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.10)
     straps = []
     aucs = []
-    bs_count = 0
+    boot_ix = 0
     t = tqdm(list(rs.split(X)))
-    counter = 0
 
     for train_index, test_index in t:
         X_train = X[train_index]
@@ -41,8 +39,8 @@ def run_bootstraps(rinv):
         y_val = y[test_index]
 
         bs_path = path / "bootstrap_results" / rinv
-        model_file = bs_path / "models" / f"bs_{bs_count}.h5"
-        roc_file = bs_path / "roc" / f"roc_{bs_count}.csv"
+        model_file = bs_path / "models" / f"bs_{boot_ix}.h5"
+        roc_file = bs_path / "roc" / f"roc_{boot_ix}.csv"
 
         if not bs_path.exists():
             os.mkdir(bs_path)
@@ -82,7 +80,7 @@ def run_bootstraps(rinv):
 
         val_predictions = np.hstack(model.predict(X_val))
         auc_val = roc_auc_score(y_val, val_predictions)
-        straps.append(bs_count)
+        straps.append(boot_ix)
         aucs.append(auc_val)
 
         fpr, tpr, thresholds = roc_curve(y_val, val_predictions)
@@ -104,13 +102,11 @@ def run_bootstraps(rinv):
         auc_mean = np.average(aucs)
         auc_ci = np.percentile(aucs, (2.5, 97.5))
         auc_ci_max = max(np.abs(auc_ci[0] - auc_mean), np.abs(auc_ci[1] - auc_mean))
-        bs_count += 1
-        counter += 1
+        boot_ix += 1
         t.set_description(
-            f"rinv={rinv} ({counter}/{n_splits}): (AUC = {auc_mean:.4f} +/- {auc_ci_max:.4f}"
+            f"rinv={rinv} ({boot_ix}/{n_splits}): (AUC = {auc_mean:.4f} +/- {auc_ci_max:.4f}"
         )
         t.refresh()
-        gc.collect()
 
 
 if __name__ == "__main__":

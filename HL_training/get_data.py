@@ -11,8 +11,8 @@ def get_data(rinv, N=None):
     y = pd.read_hdf(hl_file, "targets")
 
     if N is not None:
-        X = X.loc[: N - 1]
-        y = y.loc[: N - 1]
+        X = X.loc[:N]
+        y = y.loc[:N]
     scaler = preprocessing.StandardScaler()
     X = scaler.fit_transform(X)
     return X, y

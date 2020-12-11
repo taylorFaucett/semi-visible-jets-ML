@@ -69,7 +69,7 @@ def run_sherpa(rinv):
         )
         np.save(sherpa_results_file, study.get_best_result())
         study.finalize(trial=trial, status="COMPLETED")
-        
+
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]

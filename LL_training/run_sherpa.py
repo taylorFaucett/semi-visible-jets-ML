@@ -43,9 +43,7 @@ def run_sherpa(rinv):
     parameters, algorithm = setup_sherpa(max_num_trials)
     study_output_file = path / "sherpa_results" / f"study_{rinv}.csv"
     study = sherpa.Study(
-        parameters=parameters,
-        algorithm=algorithm,
-        lower_is_better=False
+        parameters=parameters, algorithm=algorithm, lower_is_better=False
     )
 
     X, y = get_data(rinv, N)

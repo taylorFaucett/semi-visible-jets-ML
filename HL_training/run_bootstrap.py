@@ -16,6 +16,7 @@ path = pathlib.Path.cwd()
 # Import homemade tools
 from get_data import get_data
 from get_model import get_model
+from mean_ci import mean_ci
 
 
 def run_bootstraps(rinv):
@@ -99,19 +100,17 @@ def run_bootstraps(rinv):
 
         results = pd.DataFrame({"bs": straps, "auc": aucs})
         results.to_csv(bs_path / "aucs.csv")
-        auc_mean = np.average(aucs)
-        auc_ci = np.percentile(aucs, (2.5, 97.5))
-        auc_ci_max = max(np.abs(auc_ci[0] - auc_mean), np.abs(auc_ci[1] - auc_mean))
+        auc_mean, auc_ci = mean_ci(aucs)
         boot_ix += 1
         t.set_description(
-            f"rinv={rinv} ({boot_ix}/{n_splits}): (AUC = {auc_mean:.4f} +/- {auc_ci_max:.4f}"
+            f"rinv={rinv} ({boot_ix}/{n_splits}): (AUC = {auc_mean:.4f} +/- {auc_ci:.4f})"
         )
         t.refresh()
 
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
-    n_splits = 200
+    n_splits = 10
     epochs = 200
     for rinv in rinvs:
         run_bootstraps(rinv)

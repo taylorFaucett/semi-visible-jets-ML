@@ -21,6 +21,7 @@ from get_model import get_model
 from mean_ci import mean_ci
 from get_best_sherpa_result import get_best_sherpa_result
 
+
 def run_bootstraps(run_type, rinv):
     # Trainig parameters from the sherpa optimization
     tp = get_best_sherpa_result(run_type, rinv)
@@ -52,7 +53,7 @@ def run_bootstraps(run_type, rinv):
 
         if not bs_path.parent.exists():
             os.mkdir(bs_path.parent)
-         if not bs_path.exists():   
+        if not bs_path.exists():
             os.mkdir(bs_path)
         if not model_file.parent.exists():
             os.mkdir(model_file.parent)

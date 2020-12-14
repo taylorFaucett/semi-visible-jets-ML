@@ -20,9 +20,9 @@ def get_param(run_type):
     if run_type == "LL":
         parameters = [
             sherpa.Continuous("learning_rate", [1e-4, 1e-2], "log"),
-            sherpa.Continuous("dropout_0", [0, 0.5]),
-            sherpa.Continuous("dropout_1", [0, 0.5]),
-            sherpa.Continuous("dropout_2", [0, 0.5]),
+            # sherpa.Continuous("dropout_0", [0, 0.5]),
+            # sherpa.Continuous("dropout_1", [0, 0.5]),
+            # sherpa.Continuous("dropout_2", [0, 0.5]),
             sherpa.Ordinal("batch_size", [128, 256, 512]),
             sherpa.Discrete("filter_1", [16, 400]),
             sherpa.Discrete("filter_2", [16, 400]),
@@ -34,9 +34,9 @@ def get_param(run_type):
     elif run_type == "HL":
         parameters = [
             sherpa.Continuous("learning_rate", [1e-4, 1e-2], "log"),
-            sherpa.Continuous("dropout_0", [0, 0.5]),
-            sherpa.Continuous("dropout_1", [0, 0.5]),
-            sherpa.Continuous("dropout_2", [0, 0.5]),
+            # sherpa.Continuous("dropout_0", [0, 0.5]),
+            # sherpa.Continuous("dropout_1", [0, 0.5]),
+            # sherpa.Continuous("dropout_2", [0, 0.5]),
             sherpa.Ordinal("batch_size", [128, 256, 512]),
             sherpa.Discrete("dense_units_1", [20, 400]),
             sherpa.Discrete("dense_units_2", [20, 400]),

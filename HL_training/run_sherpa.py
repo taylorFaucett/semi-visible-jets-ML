@@ -1,4 +1,5 @@
 # Standard Imports
+import os
 import pandas as pd
 import h5py
 import numpy as np
@@ -14,36 +15,37 @@ from get_model import get_model
 path = pathlib.Path.cwd()
 
 
-def setup_sherpa(max_num_trials):
+def run_sherpa(rinv):
+    results_path = path / "sherpa_results" / rinv
+    if not results_path.exists():
+        os.mkdir(results_path)
+        
+    results_csv = results_path / "results.csv"
+    if results_csv.exists():
+        return
+    
     parameters = [
         sherpa.Continuous("learning_rate", [1e-4, 1e-2], "log"),
+        sherpa.Continuous("dropout_0", [0, 0.5]),
         sherpa.Continuous("dropout_1", [0, 0.5]),
         sherpa.Continuous("dropout_2", [0, 0.5]),
-        sherpa.Ordinal(name="batch_size", range=[256, 512, 1024]),
-        sherpa.Discrete("dense_units_1", [32, 400]),
-        sherpa.Discrete("dense_units_2", [32, 400]),
-        sherpa.Discrete("dense_units_3", [32, 400]),
+        sherpa.Ordinal("batch_size", [128, 256, 512]),
+        sherpa.Discrete("dense_units_1", [20, 400]),
+        sherpa.Discrete("dense_units_2", [20, 400]),
+        sherpa.Discrete("dense_units_3", [20, 400]),
     ]
 
     algorithm = sherpa.algorithms.bayesian_optimization.GPyOpt(
         max_num_trials=max_num_trials
     )
-    return parameters, algorithm
-
-
-def run_sherpa(rinv):
-    sherpa_results_file = path / "sherpa_results" / f"{rinv}.npy"
-    if sherpa_results_file.exists():
-        return sherpa_results_file
-
-    parameters, algorithm = setup_sherpa(max_num_trials)
+    
     study = sherpa.Study(
-        parameters=parameters, algorithm=algorithm, lower_is_better=False
+        parameters=parameters, algorithm=algorithm, lower_is_better=False, disable_dashboard=True, output_dir=results_path
     )
 
     X, y = get_data(rinv, N)
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.8, random_state=42
+        X, y, test_size=0.75, random_state=42
     )
     t = tqdm.tqdm(study, total=max_num_trials)
     for trial in t:
@@ -51,8 +53,7 @@ def run_sherpa(rinv):
         tp = trial.parameters
         model = get_model(tp=tp, input_shape=X_train.shape[1])
         for i in range(trial_epochs):
-            model.fit(X_train, y_train, batch_size=int(tp["batch_size"]), verbose=0)
-
+            training_error = model.fit(X_train, y_train, batch_size=int(tp["batch_size"]), verbose=0)
             loss, accuracy, auc = model.evaluate(X_test, y_test, verbose=0)
             study.add_observation(
                 trial=trial,
@@ -64,18 +65,18 @@ def run_sherpa(rinv):
                 study.finalize(trial=trial, status="STOPPED")
                 break
 
+        study.finalize(trial=trial, status="COMPLETED")
+        np.save(results_path / "best_results.npy", study.get_best_result())
+        study.save()
         t.set_description(
             f"Trial {trial.id}; rinv={rinv.replace('p','.')} -> Test AUC = {auc:.4}"
         )
-        np.save(sherpa_results_file, study.get_best_result())
-        study.finalize(trial=trial, status="COMPLETED")
 
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
-    N = 200000
+    N = 100000
     max_num_trials = 100
-    trial_epochs = 15
-
+    trial_epochs = 10
     for rinv in rinvs:
         run_sherpa(rinv)

@@ -22,7 +22,7 @@ from mean_ci import mean_ci
 
 def run_bootstraps(rinv):
     # Trainig parameters from the sherpa optimization
-    tp = np.load(f"sherpa_results/{rinv}.npy", allow_pickle="TRUE").item()
+    tp = np.load(f"sherpa_results/{rinv}/best_results.npy", allow_pickle="TRUE").item()
     X, y = get_data(rinv)
 
     rs = ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.10)
@@ -110,7 +110,7 @@ def run_bootstraps(rinv):
 
 if __name__ == "__main__":
     rinvs = ["0p0", "0p3", "1p0"]
-    n_splits = 200
+    n_splits = 5
     epochs = 200
     for rinv in rinvs:
         run_bootstraps(rinv)

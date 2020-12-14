@@ -47,8 +47,9 @@ def get_param(run_type):
 
 def run_sherpa(run_type, rinv):
     results_path = path / "sherpa_results" / run_type / rinv
-    if not results_path.exists():
+    if not results_path.parent.exists():
         os.mkdir(results_path.parent)
+    if not results_path.exists():
         os.mkdir(results_path)
 
     algorithm = sherpa.algorithms.bayesian_optimization.GPyOpt(
@@ -70,7 +71,7 @@ def run_sherpa(run_type, rinv):
         X, y, test_size=0.75, random_state=42
     )
     t = tqdm.tqdm(study, total=max_num_trials)
-    for tix, trial in enumerate(t):
+    for trial in t:
         # Sherpa settings in trials
         tp = trial.parameters
         if run_type == "HL":
@@ -79,9 +80,7 @@ def run_sherpa(run_type, rinv):
             input_shape = None
         model = get_model(run_type, tp, input_shape=input_shape)
         for i in range(trial_epochs):
-            training_error = model.fit(
-                X_train, y_train, batch_size=int(tp["batch_size"]), verbose=0
-            )
+            model.fit(X_train, y_train, batch_size=int(tp["batch_size"]), verbose=0)
             loss, accuracy, auc = model.evaluate(X_test, y_test, verbose=0)
             study.add_observation(
                 trial=trial,
@@ -104,7 +103,6 @@ def run_sherpa(run_type, rinv):
 if __name__ == "__main__":
     run_type = str(sys.argv[1])
     rinvs = ["0p0", "0p3", "1p0"]
-
     for rinv in rinvs:
         N = 100000
         max_num_trials = 50

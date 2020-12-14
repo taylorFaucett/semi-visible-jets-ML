@@ -122,18 +122,6 @@ def brute_force_iteration(pass_ix, past_efps):
             t.refresh()
 
 
-def get_max_efp(pass_ix):
-    it_dir = f"{pass_dir}/p{pass_ix}"
-    stats_file = f"{it_dir}/stats.csv"
-    stats_df = pd.read_csv(stats_file, index_col=0)
-    sorted_stats = stats_df.sort_values(by=["ado"], ascending=False)
-    maxs = sorted_stats.iloc[0]
-    efp = maxs.efp
-    auc = maxs.auc
-    ado = maxs.ado
-    return efp, auc, ado
-
-
 if __name__ == "__main__":
     auc_val = 0
     pass_ix = 0

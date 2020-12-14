@@ -60,8 +60,9 @@ def run_bootstraps(run_type, rinv):
         roc_file = bs_path / "roc" / f"roc_{boot_ix}.csv"
         ll_pred_file = bs_path / "ll_predictions" / f"pred_{boot_ix}.npy"
 
-        if not bs_path.exists():
+        if not bs_path.parent.exists():
             os.mkdir(bs_path.parent)
+         if not bs_path.exists():   
             os.mkdir(bs_path)
         if not model_file.parent.exists():
             os.mkdir(model_file.parent)
@@ -86,7 +87,7 @@ def run_bootstraps(run_type, rinv):
                 ),
             ]
 
-            history = model.fit(
+            model.fit(
                 X_train,
                 y_train,
                 epochs=epochs,
@@ -108,7 +109,7 @@ def run_bootstraps(run_type, rinv):
         straps.append(boot_ix)
         aucs.append(auc_val)
 
-        fpr, tpr, thresholds = roc_curve(y_val, val_predictions)
+        fpr, tpr, _ = roc_curve(y_val, val_predictions)
         background_efficiency = fpr
         signal_efficiency = tpr
         background_rejection = 1.0 - background_efficiency
@@ -133,7 +134,7 @@ def run_bootstraps(run_type, rinv):
 
 
 if __name__ == "__main__":
-    run_types = str(sys.argv[1])
+    run_type = str(sys.argv[1])
     rinvs = ["0p0", "0p3", "1p0"]
     n_splits = 5
     epochs = 200

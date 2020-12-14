@@ -7,4 +7,5 @@ py.py
 data/
 svj-rsync.sh
 .vscode/
-bootstrap_results/
+bootstrap_results/models
+bootstrap_results/roc

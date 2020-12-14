@@ -93,7 +93,6 @@ def run_sherpa(run_type, rinv):
                 break
 
         study.finalize(trial=trial, status="COMPLETED")
-        np.save(results_path / "best_results.npy", study.get_best_result())
         study.save()
         t.set_description(
             f"Trial {trial.id}; rinv={rinv.replace('p','.')} -> AUC = {auc:.4}"

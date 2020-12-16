@@ -92,7 +92,7 @@ def run_brute_force(rinv, pass_ix):
         pass_stats = pd.DataFrame(columns=["efp", "auc", "ado"])
 
     # Load sherpa result parameters
-    tp = get_best_sherpa_result("HL", rinv)
+    tp = get_best_sherpa_result(rinv)
 
     # Load CNN predictions to calculate ADO with respect to
     ll_pred = np.load(

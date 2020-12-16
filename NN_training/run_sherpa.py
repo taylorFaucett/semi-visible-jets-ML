@@ -19,28 +19,21 @@ path = pathlib.Path.cwd()
 def get_param(run_type):
     if run_type == "LL":
         parameters = [
-            sherpa.Continuous("learning_rate", [1e-4, 1e-2], "log"),
-            # sherpa.Continuous("dropout_0", [0, 0.5]),
-            # sherpa.Continuous("dropout_1", [0, 0.5]),
-            # sherpa.Continuous("dropout_2", [0, 0.5]),
-            sherpa.Ordinal("batch_size", [128, 256, 512]),
-            sherpa.Discrete("filter_1", [16, 400]),
-            sherpa.Discrete("filter_2", [16, 400]),
-            sherpa.Discrete("filter_3", [16, 400]),
-            sherpa.Discrete("dense_units_1", [20, 400]),
-            sherpa.Discrete("dense_units_2", [20, 400]),
-            sherpa.Discrete("dense_units_3", [20, 400]),
+            sherpa.Continuous("learning_rate", [1e-5, 1e-3], "log"),
+            sherpa.Continuous("dropout", [0, 0.5]),
+            sherpa.Ordinal("batch_size", [32, 64, 128]),
+            sherpa.Ordinal("conv_blocks", [1, 2, 3, 4]),
+            sherpa.Ordinal("dense_layers", [1, 2, 3]),
+            sherpa.Discrete("filter_units", [8, 128]),
+            sherpa.Discrete("dense_units", [20, 200]),
         ]
     elif run_type == "HL":
         parameters = [
-            sherpa.Continuous("learning_rate", [1e-4, 1e-2], "log"),
-            # sherpa.Continuous("dropout_0", [0, 0.5]),
-            # sherpa.Continuous("dropout_1", [0, 0.5]),
-            # sherpa.Continuous("dropout_2", [0, 0.5]),
-            sherpa.Ordinal("batch_size", [128, 256, 512]),
-            sherpa.Discrete("dense_units_1", [20, 400]),
-            sherpa.Discrete("dense_units_2", [20, 400]),
-            sherpa.Discrete("dense_units_3", [20, 400]),
+            sherpa.Continuous("learning_rate", [1e-5, 1e-3], "log"),
+            sherpa.Continuous("dropout", [0, 0.5]),
+            sherpa.Ordinal("dense_layers", [1, 2, 3, 4, 5, 6, 7, 8]),
+            sherpa.Ordinal("batch_size", [32, 64, 128]),
+            sherpa.Discrete("dense_units", [20, 200]),
         ]
     return parameters
 
@@ -53,9 +46,11 @@ def run_sherpa(run_type, rinv):
         os.mkdir(results_path)
 
     algorithm = sherpa.algorithms.bayesian_optimization.GPyOpt(
-        max_num_trials=max_num_trials
+        max_concurrent=1,
+        model_type="GP_MCMC",
+        acquisition_type="EI_MCMC",
+        max_num_trials=max_num_trials,
     )
-
     parameters = get_param(run_type)
 
     study = sherpa.Study(
@@ -101,9 +96,8 @@ def run_sherpa(run_type, rinv):
 
 if __name__ == "__main__":
     run_type = str(sys.argv[1])
-    rinvs = ["0p0", "0p3", "1p0"]
-    for rinv in rinvs:
-        N = 100000
-        max_num_trials = 50
-        trial_epochs = 15
-        run_sherpa(run_type, rinv)
+    rinv = str(sys.argv[2])
+    N = 100000
+    max_num_trials = 150
+    trial_epochs = 15
+    run_sherpa(run_type, rinv)

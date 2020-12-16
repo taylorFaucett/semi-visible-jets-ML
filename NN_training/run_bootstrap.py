@@ -24,7 +24,7 @@ from get_best_sherpa_result import get_best_sherpa_result
 
 def run_bootstraps(run_type, rinv):
     # Trainig parameters from the sherpa optimization
-    tp = get_best_sherpa_result(run_type, rinv)
+    tp = get_best_sherpa_result(run_type, rinv, "accuracy")
     X, y = get_data(run_type, rinv)
 
     rs = ShuffleSplit(n_splits=n_splits, random_state=0, test_size=0.10)
@@ -67,7 +67,7 @@ def run_bootstraps(run_type, rinv):
             callbacks = [
                 keras.callbacks.EarlyStopping(
                     monitor="val_auc",
-                    patience=10,
+                    patience=3,
                     min_delta=0.0001,
                     verbose=0,
                     restore_best_weights=True,
@@ -126,8 +126,7 @@ def run_bootstraps(run_type, rinv):
 
 if __name__ == "__main__":
     run_type = str(sys.argv[1])
-    rinvs = ["0p0", "0p3", "1p0"]
+    rinv = str(sys.argv[2])
     n_splits = 5
     epochs = 200
-    for rinv in rinvs:
-        run_bootstraps(run_type, rinv)
+    run_bootstraps(run_type, rinv)

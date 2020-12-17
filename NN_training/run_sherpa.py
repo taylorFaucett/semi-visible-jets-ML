@@ -22,7 +22,7 @@ def get_param(run_type):
             sherpa.Continuous("learning_rate", [1e-5, 1e-3], "log"),
             sherpa.Continuous("dropout_1", [0, 0.5]),
             sherpa.Continuous("dropout_2", [0, 0.5]),
-            sherpa.Ordinal("batch_size", [64, 128, 256]),
+            sherpa.Ordinal("batch_size", [32, 64, 128]),
             sherpa.Discrete("filter_units_1", [32, 320]),
             sherpa.Discrete("filter_units_2", [32, 320]),
             sherpa.Discrete("filter_units_3", [32, 320]),

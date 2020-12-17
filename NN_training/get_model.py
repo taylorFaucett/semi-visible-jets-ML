@@ -3,21 +3,20 @@ import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
+# Keras/TF imports
 import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Dense, Flatten, Dropout, Conv2D, MaxPooling2D
+from keras.optimizers import Adam
+from keras import metrics
+from keras.initializers import Orthogonal
+from keras.constraints import max_norm
+from keras.regularizers import l2
+
 
 gpus = tf.config.experimental.list_physical_devices("GPU")
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
-
-
-# Keras imports
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten, Dropout, Conv2D, MaxPooling2D
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras import metrics
-from tensorflow.keras.initializers import Orthogonal
-from tensorflow.keras.constraints import max_norm
-from tensorflow.keras.regularizers import l2
 
 
 kernel_initializer = Orthogonal(gain=1.0, seed=None)
@@ -32,16 +31,16 @@ def get_LL(model, tp):
     model.add(
         Conv2D(
             int(tp["filter_units_1"]),
-            (int(tp["kernel_size_1"]), int(tp["kernel_size_1"])),
+            kernel_size=int(tp["kernel_size_1"]),
             padding="same",
             activation="relu",
         )
     )
-    model.add(MaxPooling2D((int(tp["max_pool_1"]), int(tp["max_pool_1"]))))
+    model.add(MaxPooling2D(pool_size=int(tp["max_pool_1"]), padding="same"))
     model.add(
         Conv2D(
             int(tp["filter_units_2"]),
-            (int(tp["kernel_size_2"]), int(tp["kernel_size_2"])),
+            kernel_size=int(tp["kernel_size_2"]),
             padding="same",
             activation="relu",
         )
@@ -49,20 +48,16 @@ def get_LL(model, tp):
     model.add(
         Conv2D(
             int(tp["filter_units_3"]),
-            (int(tp["kernel_size_3"]), int(tp["kernel_size_3"])),
+            kernel_size=int(tp["kernel_size_3"]),
             padding="same",
             activation="relu",
         )
     )
-
     model.add(Flatten())
-
-    model.add(Dense(int(tp["dense_units_1"]), activation="relu",))
+    model.add(Dense(int(tp["dense_units_1"]), activation="relu"))
     model.add(Dropout(tp["dropout_1"]))
-
-    model.add(Dense(int(tp["dense_units_2"]), activation="relu",))
+    model.add(Dense(int(tp["dense_units_2"]), activation="relu"))
     model.add(Dropout(tp["dropout_2"]))
-
     return model
 
 
@@ -98,5 +93,5 @@ def get_model(run_type, tp, input_shape=None):
         optimizer=Adam(lr=tp["learning_rate"]),
         metrics=["accuracy", metrics.AUC(name="auc")],
     )
-
+    
     return model

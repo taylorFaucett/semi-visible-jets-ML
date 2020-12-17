@@ -22,7 +22,7 @@ from mean_ci import mean_ci
 from get_best_sherpa_result import get_best_sherpa_result
 
 
-def run_bootstraps(run_type, rinv):
+def run_bootstraps(run_type, rinv, verbose):
     # Trainig parameters from the sherpa optimization
     tp = get_best_sherpa_result(run_type, rinv, "accuracy")
     X, y = get_data(run_type, rinv)
@@ -64,17 +64,20 @@ def run_bootstraps(run_type, rinv):
 
         if not model_file.exists():
             model = get_model(run_type, tp, input_shape)
+            
+            if verbose > 0:
+                print(model.summary())
             callbacks = [
                 keras.callbacks.EarlyStopping(
                     monitor="val_auc",
                     patience=3,
                     min_delta=0.0001,
-                    verbose=0,
+                    verbose=verbose,
                     restore_best_weights=True,
                     mode="max",
                 ),
                 keras.callbacks.ModelCheckpoint(
-                    filepath=model_file, verbose=0, save_best_only=True
+                    filepath=model_file, verbose=verbose, save_best_only=True
                 ),
             ]
 
@@ -82,8 +85,8 @@ def run_bootstraps(run_type, rinv):
                 X_train,
                 y_train,
                 epochs=epochs,
-                verbose=2,
-                batch_size=int(tp["batch_size"]),
+                verbose=verbose,
+                batch_size=256, #int(tp["batch_size"]),
                 validation_data=(X_val, y_val),
                 callbacks=callbacks,
             )
@@ -95,7 +98,8 @@ def run_bootstraps(run_type, rinv):
         auc_val = roc_auc_score(y_val, val_predictions)
 
         # Save the predictions
-        np.save(ll_pred_file, model.predict(X))
+        if save_pred:
+            np.save(ll_pred_file, model.predict(X))
 
         straps.append(boot_ix)
         aucs.append(auc_val)
@@ -129,4 +133,4 @@ if __name__ == "__main__":
     rinv = str(sys.argv[2])
     n_splits = 50
     epochs = 200
-    run_bootstraps(run_type, rinv)
+    run_bootstraps(run_type, rinv, verbose=2, save_pred=False)

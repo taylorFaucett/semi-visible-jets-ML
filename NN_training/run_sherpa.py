@@ -20,12 +20,18 @@ def get_param(run_type):
     if run_type == "LL":
         parameters = [
             sherpa.Continuous("learning_rate", [1e-5, 1e-3], "log"),
-            sherpa.Continuous("dropout", [0, 0.5]),
-            sherpa.Ordinal("batch_size", [32, 64, 128]),
-            sherpa.Ordinal("conv_blocks", [1, 2, 3, 4]),
-            sherpa.Ordinal("dense_layers", [1, 2, 3]),
-            sherpa.Discrete("filter_units", [8, 128]),
-            sherpa.Discrete("dense_units", [20, 200]),
+            sherpa.Continuous("dropout_1", [0, 0.5]),
+            sherpa.Continuous("dropout_2", [0, 0.5]),
+            sherpa.Ordinal("batch_size", [64, 128, 256]),
+            sherpa.Discrete("filter_units_1", [32, 320]),
+            sherpa.Discrete("filter_units_2", [32, 320]),
+            sherpa.Discrete("filter_units_3", [32, 320]),
+            sherpa.Discrete("max_pool_1", [2, 4]),
+            sherpa.Discrete("kernel_size_1", [1, 4]),
+            sherpa.Discrete("kernel_size_2", [1, 4]),
+            sherpa.Discrete("kernel_size_3", [1, 4]),
+            sherpa.Discrete("dense_units_1", [20, 300]),
+            sherpa.Discrete("dense_units_2", [20, 300]),
         ]
     elif run_type == "HL":
         parameters = [
@@ -97,7 +103,7 @@ def run_sherpa(run_type, rinv):
 if __name__ == "__main__":
     run_type = str(sys.argv[1])
     rinv = str(sys.argv[2])
-    N = 100000
-    max_num_trials = 150
-    trial_epochs = 15
+    N = 50000
+    max_num_trials = 50
+    trial_epochs = 10
     run_sherpa(run_type, rinv)

@@ -127,6 +127,6 @@ def run_bootstraps(run_type, rinv):
 if __name__ == "__main__":
     run_type = str(sys.argv[1])
     rinv = str(sys.argv[2])
-    n_splits = 5
+    n_splits = 50
     epochs = 200
     run_bootstraps(run_type, rinv)

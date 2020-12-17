@@ -7,6 +7,4 @@ py.py
 data/
 svj-rsync.sh
 .vscode/
-models/
-roc/
 aucs.csv

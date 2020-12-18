@@ -22,7 +22,7 @@ from mean_ci import mean_ci
 from get_best_sherpa_result import get_best_sherpa_result
 
 
-def run_bootstraps(run_type, rinv, verbose):
+def run_bootstraps(run_type, rinv, verbose, save_pred=False):
     # Trainig parameters from the sherpa optimization
     tp = get_best_sherpa_result(run_type, rinv, "accuracy")
     X, y = get_data(run_type, rinv)
@@ -131,6 +131,6 @@ def run_bootstraps(run_type, rinv, verbose):
 if __name__ == "__main__":
     run_type = str(sys.argv[1])
     rinv = str(sys.argv[2])
-    n_splits = 50
+    n_splits = 200
     epochs = 200
     run_bootstraps(run_type, rinv, verbose=2, save_pred=False)

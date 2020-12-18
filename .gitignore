@@ -8,3 +8,5 @@ data/
 svj-rsync.sh
 .vscode/
 aucs.csv
+EFN_training/
+TeX/

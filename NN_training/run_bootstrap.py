@@ -129,8 +129,10 @@ def run_bootstraps(run_type, rinv, verbose, save_pred=False):
 
 
 if __name__ == "__main__":
-    run_type = str(sys.argv[1])
-    rinv = str(sys.argv[2])
+    run_types = ["LL"]
+    rinvs = ["0p0", "0p3", "1p0"]
     n_splits = 200
-    epochs = 200
-    run_bootstraps(run_type, rinv, verbose=2, save_pred=False)
+    epochs = 5
+    for run_type in run_types:
+        for rinv in rinvs:
+            run_bootstraps(run_type, rinv, verbose=2, save_pred=True)

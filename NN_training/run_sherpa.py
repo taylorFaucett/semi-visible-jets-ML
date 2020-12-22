@@ -51,14 +51,14 @@ def run_sherpa(run_type, rinv):
     if not results_path.exists():
         os.mkdir(results_path)
 
-#     algorithm = sherpa.algorithms.bayesian_optimization.GPyOpt(
-#         max_concurrent=1,
-#         model_type="GP_MCMC",
-#         acquisition_type="EI_MCMC",
-#         max_num_trials=max_num_trials,
-#     )
-    
-    algorithm = sherpa.algorithms.RandomSearch(max_num_trials=max_num_trials)
+    algorithm = sherpa.algorithms.bayesian_optimization.GPyOpt(
+        max_concurrent=1,
+        model_type="GP_MCMC",
+        acquisition_type="EI_MCMC",
+        max_num_trials=max_num_trials,
+    )
+
+    # algorithm = sherpa.algorithms.RandomSearch(max_num_trials=max_num_trials)
     parameters = get_param(run_type)
 
     study = sherpa.Study(
@@ -83,7 +83,9 @@ def run_sherpa(run_type, rinv):
             input_shape = None
         model = get_model(run_type, tp, input_shape=input_shape)
         for i in range(trial_epochs):
-            model.fit(X_train, y_train, epochs=3, batch_size=int(tp["batch_size"]), verbose=0)
+            model.fit(
+                X_train, y_train, epochs=3, batch_size=int(tp["batch_size"]), verbose=0
+            )
             loss, accuracy, auc = model.evaluate(X_test, y_test, verbose=0)
             study.add_observation(
                 trial=trial,
@@ -103,9 +105,11 @@ def run_sherpa(run_type, rinv):
 
 
 if __name__ == "__main__":
-    run_type = str(sys.argv[1])
-    rinv = str(sys.argv[2])
+    run_types = ["LL"]
+    rinvs = ["0p0", "0p3", "1p0"]
     N = 50000
     max_num_trials = 150
-    trial_epochs = 10
-    run_sherpa(run_type, rinv)
+    trial_epochs = 15
+    for run_type in run_types:
+        for rinv in rinvs:
+            run_sherpa(run_type, rinv)
